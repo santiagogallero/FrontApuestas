@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const API_BASE = 'http://10.0.2.2:8080';
+export const API_BASE = 'http://localhost:8080';
 
 const TOKEN_KEY = 'auth_token';
 
