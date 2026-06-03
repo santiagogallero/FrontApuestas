@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, SafeAreaView, Alert, StyleSheet } from 'react-native';
-import { AppHeader, AppButton, BottomNav } from '../components';
+import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
+import { AppHeader, AppButton, BottomNav, CreditCardIcon, BankIcon, CheckCircleIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -19,26 +19,26 @@ export function BilleteraScreen({ onNavigate }: BilleteraScreenProps) {
           {/* Nota: el backend no expone GET /api/auth/payment-methods; esto es mock hasta que se implemente */}
           <View style={[styles.paymentCard, { backgroundColor: Colors.primary }]}>
             <View style={styles.paymentIconBox}>
-              <Text style={{ fontSize: 20 }}>💳</Text>
+              <CreditCardIcon size={20} color={Colors.white} />
             </View>
             <View style={styles.paymentInfo}>
               <Text style={[styles.paymentTitle, { color: Colors.white }]}>Tarjeta Visa que termina en 4242</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <Text style={{ fontSize: 12, color: '#93C5FD', marginRight: 4 }}>✅</Text>
-                <Text style={[styles.paymentSub, { color: '#93C5FD' }]}>VERIFICADA</Text>
+                <CheckCircleIcon size={13} color="#BFDBFE" />
+                <Text style={[styles.paymentSub, { color: '#BFDBFE', marginLeft: 5 }]}>VERIFICADA</Text>
               </View>
             </View>
           </View>
 
           <View style={[styles.paymentCard, { backgroundColor: Colors.gray4, marginTop: 12 }]}>
             <View style={[styles.paymentIconBox, { backgroundColor: Colors.white }]}>
-              <Text style={{ fontSize: 20 }}>🏦</Text>
+              <BankIcon size={20} color={Colors.primary} />
             </View>
             <View style={styles.paymentInfo}>
               <Text style={[styles.paymentTitle, { color: Colors.dark }]}>Cuenta bancaria de Chase que termina en 7856</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <Text style={{ fontSize: 12, color: Colors.gray, marginRight: 4 }}>✅</Text>
-                <Text style={[styles.paymentSub, { color: Colors.gray }]}>VERIFICADA</Text>
+                <CheckCircleIcon size={13} color={Colors.green} />
+                <Text style={[styles.paymentSub, { color: Colors.gray, marginLeft: 5 }]}>VERIFICADA</Text>
               </View>
             </View>
           </View>
@@ -51,7 +51,7 @@ export function BilleteraScreen({ onNavigate }: BilleteraScreenProps) {
             <Text style={styles.balanceAmount}>$12,480.00</Text>
           </View>
 
-          <AppButton title="+ Agregar método de pago" icon="🔒" onPress={() => Alert.alert('Próximamente', 'Función en desarrollo')} />
+          <AppButton title="+ Agregar método de pago" onPress={() => onNavigate('agregarMetodoPago')} />
         </View>
       </ScrollView>
       <BottomNav active="billetera" onNavigate={onNavigate} />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Image, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-native';
-import { AppHeader } from '../components';
+import { AppHeader, CheckIcon, DownloadIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -15,7 +15,9 @@ export function PagoExitosoScreen({ onNavigate }: PagoExitosoScreenProps) {
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={[styles.content, { alignItems: 'center' }]}>
           <View style={[styles.iconCircle, { backgroundColor: Colors.greenLight, marginBottom: 20 }]}>
-            <Text style={{ fontSize: 40 }}>✅</Text>
+            <View style={styles.checkInner}>
+              <CheckIcon size={26} color={Colors.white} />
+            </View>
           </View>
           <Text style={[styles.screenTitle, { textAlign: 'center' }]}>Pago exitoso</Text>
           <Text style={[styles.subtitle, { textAlign: 'center', fontSize: 12, letterSpacing: 1 }]}>
@@ -39,8 +41,9 @@ export function PagoExitosoScreen({ onNavigate }: PagoExitosoScreenProps) {
               <Text style={styles.offerLabel}>TOTAL PAID</Text>
               <Text style={[styles.bidPrice, { fontSize: 28 }]}>$1,880.00</Text>
             </View>
-            <TouchableOpacity style={[styles.chip, { borderWidth: 1, borderColor: Colors.gray3 }]}>
-              <Text style={styles.chipText}>⬇️ Descargar Recibo</Text>
+            <TouchableOpacity style={[styles.chip, styles.downloadChip]}>
+              <DownloadIcon size={16} color={Colors.gray} />
+              <Text style={[styles.chipText, { marginLeft: 8 }]}>Descargar Recibo</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -55,7 +58,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingVertical: 20 },
   screenTitle: { fontSize: 28, fontWeight: 'bold', color: Colors.dark, marginBottom: 16 },
   subtitle: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
-  iconCircle: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center' },
+  iconCircle: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center' },
+  checkInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.green, justifyContent: 'center', alignItems: 'center' },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   detailImage: { width: '100%', height: 260, borderRadius: 20 },
@@ -63,5 +67,6 @@ const styles = StyleSheet.create({
   offerLabel: { fontSize: 10, color: Colors.gray, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
   bidPrice: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 4 },
   chip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, backgroundColor: Colors.gray4 },
+  downloadChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.blueLight },
   chipText: { color: Colors.gray, fontSize: 14, fontWeight: '500' },
 });

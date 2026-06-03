@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, SafeAreaView, StyleSheet } from 'react-native';
-import { AppHeader } from '../components';
+import { AppHeader, PlusIcon, MicIcon, SendIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -23,8 +23,9 @@ export function ChatSoporteScreen({ onNavigate }: ChatSoporteScreenProps) {
           </View>
         }
       />
-      <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
-        <Text style={{ color: Colors.gray, fontSize: 12, textAlign: 'center' }}>● UNIDAD DE AUTENTICACIÓN</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 }}>
+        <View style={styles.statusDot} />
+        <Text style={{ color: Colors.gray, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 }}>UNIDAD DE AUTENTICACIÓN</Text>
       </View>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -63,7 +64,7 @@ export function ChatSoporteScreen({ onNavigate }: ChatSoporteScreenProps) {
       </ScrollView>
       <View style={styles.chatInputBar}>
         <TouchableOpacity style={[styles.chatInputBtn, { width: 40 }]}>
-          <Text style={{ fontSize: 20 }}>+</Text>
+          <PlusIcon size={22} color={Colors.gray} />
         </TouchableOpacity>
         <TextInput
           style={styles.chatInput}
@@ -71,10 +72,10 @@ export function ChatSoporteScreen({ onNavigate }: ChatSoporteScreenProps) {
           placeholderTextColor={Colors.gray2}
         />
         <TouchableOpacity style={[styles.chatInputBtn, { width: 40 }]}>
-          <Text style={{ fontSize: 20 }}>🎤</Text>
+          <MicIcon size={20} color={Colors.gray2} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.chatSendBtn}>
-          <Text style={{ color: Colors.white, fontSize: 16 }}>▶</Text>
+          <SendIcon size={18} color={Colors.white} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -89,6 +90,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16 },
   badgeText: { fontSize: 11, fontWeight: '700' },
+  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.green, marginRight: 8 },
   chatBubble: { maxWidth: '80%', borderRadius: 18, padding: 14, marginBottom: 10 },
   chatInputBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: Colors.white, borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingBottom: 12 },
   chatInput: { flex: 1, height: 44, backgroundColor: Colors.gray4, borderRadius: 22, paddingHorizontal: 16, fontSize: 15, color: Colors.dark, marginHorizontal: 8 },

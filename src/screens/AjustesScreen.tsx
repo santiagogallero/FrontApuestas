@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, SafeAreaView, Alert, StyleSheet } from 'react-native';
-import { AppHeader, AppButton, Toggle } from '../components';
+import { AppHeader, AppButton, Toggle, BellIcon, GlobeIcon, LockIcon, DollarIcon, MoonIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
 interface AjustesScreenProps {
   onNavigate: NavigateFn;
 }
+
+type IconCmp = (p: { size?: number; color?: string }) => React.ReactElement;
 
 export function AjustesScreen({ onNavigate }: AjustesScreenProps) {
   const [settings, setSettings] = useState({
@@ -17,12 +19,12 @@ export function AjustesScreen({ onNavigate }: AjustesScreenProps) {
     modoOscuro: false,
   });
 
-  const items = [
-    { key: 'notificaciones', label: 'Notificaciones', icon: '🔔' },
-    { key: 'idioma', label: 'Idioma: Español', icon: '🌐' },
-    { key: 'biometrico', label: 'Autenticación biométrica', icon: '🔐' },
-    { key: 'moneda', label: 'Moneda: USD', icon: '$' },
-    { key: 'modoOscuro', label: 'Modo oscuro', icon: '🌙' },
+  const items: { key: string; label: string; Icon: IconCmp }[] = [
+    { key: 'notificaciones', label: 'Notificaciones', Icon: BellIcon },
+    { key: 'idioma', label: 'Idioma: Español', Icon: GlobeIcon },
+    { key: 'biometrico', label: 'Autenticación biométrica', Icon: LockIcon },
+    { key: 'moneda', label: 'Moneda: USD', Icon: DollarIcon },
+    { key: 'modoOscuro', label: 'Modo oscuro', Icon: MoonIcon },
   ];
 
   return (
@@ -34,7 +36,7 @@ export function AjustesScreen({ onNavigate }: AjustesScreenProps) {
           {items.map((item) => (
             <View key={item.key} style={styles.settingRow}>
               <View style={styles.menuIconBox}>
-                <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+                <item.Icon size={20} color={Colors.primary} />
               </View>
               <Text style={styles.menuLabel}>{item.label}</Text>
               <Toggle

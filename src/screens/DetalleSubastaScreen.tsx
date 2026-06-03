@@ -9,8 +9,9 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, BottomNav } from '../components';
+import { AppHeader, BottomNav, BellIcon, GavelIcon, ShieldIcon } from '../components';
 import { useDetalleSubasta } from '../hooks';
+import { useAuthContext } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import type { NavigateFn, ScreenParams } from '../types/navigation';
 
@@ -22,6 +23,8 @@ interface DetalleSubastaScreenProps {
 export function DetalleSubastaScreen({ onNavigate, params }: DetalleSubastaScreenProps) {
   const subasta = (params as any)?.subasta ?? (params as any)?.item ?? { id: 0, fecha: '', hora: '', estado: '', categoria: '', ubicacion: '', capacidadAsistentes: 0 };
   const { conectando, conectado, pujando, lastPuja, conectar, pujar } = useDetalleSubasta(subasta.id);
+  const { currentUser } = useAuthContext();
+  const initials = currentUser?.email?.slice(0, 2).toUpperCase() ?? 'JD';
   const [importeManual, setImporteManual] = useState('');
   const [itemIdPuja] = useState(1);
 
@@ -46,7 +49,18 @@ export function DetalleSubastaScreen({ onNavigate, params }: DetalleSubastaScree
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="Subastas" onBack={() => onNavigate('subastas')} right={<Text style={{ fontSize: 20 }}>🔔</Text>} />
+      <AppHeader
+        title="Subastas"
+        onBack={() => onNavigate('subastas')}
+        right={
+          <View style={styles.headerRight}>
+            <BellIcon size={22} color={Colors.dark} />
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+          </View>
+        }
+      />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.liveIndicator}>
@@ -55,8 +69,16 @@ export function DetalleSubastaScreen({ onNavigate, params }: DetalleSubastaScree
           </View>
 
           <View style={[styles.detailImage, { backgroundColor: Colors.blueLight, justifyContent: 'center', alignItems: 'center', borderRadius: 16 }]}>
-            <Text style={{ fontSize: 64 }}>🔨</Text>
+            <GavelIcon size={72} color={Colors.primary} strokeWidth={1.5} />
           </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gallery}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <View key={i} style={styles.thumb}>
+                <GavelIcon size={24} color={Colors.gray2} strokeWidth={1.6} />
+              </View>
+            ))}
+          </ScrollView>
 
           <Text style={[styles.screenTitle, { marginTop: 20 }]}>Subasta #{subasta.id}</Text>
           <Text style={styles.detailSubtitle}>
@@ -108,7 +130,10 @@ export function DetalleSubastaScreen({ onNavigate, params }: DetalleSubastaScree
                 {(minimo > 0 || maximo > 0) && (
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
                     <Text style={{ color: Colors.gray, fontSize: 12 }}>Min: ${minimo.toLocaleString()} | Max: ${maximo.toLocaleString()}</Text>
-                    <Text style={{ color: Colors.green, fontSize: 12 }}>🛡️ Seguro: Activo</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <ShieldIcon size={13} color={Colors.green} />
+                      <Text style={{ color: Colors.green, fontSize: 12, marginLeft: 5 }}>Seguro: Activo</Text>
+                    </View>
                   </View>
                 )}
               </>
@@ -134,6 +159,11 @@ const styles = StyleSheet.create({
   liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.red, marginRight: 8 },
   liveText: { color: Colors.red, fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
   detailImage: { width: '100%', height: 260 },
+  gallery: { marginTop: 12 },
+  thumb: { width: 56, height: 56, borderRadius: 12, backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.blueLight, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: Colors.primary, fontSize: 12, fontWeight: '700' },
   detailSubtitle: { color: Colors.gray, fontSize: 14, marginBottom: 16 },
   bidCard: { backgroundColor: Colors.gray4, borderRadius: 20, padding: 20 },
   bidLabel: { fontSize: 11, color: Colors.gray, fontWeight: '600', letterSpacing: 0.5 },

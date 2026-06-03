@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
-import { AppHeader, AppButton } from '../components';
+import { AppHeader, AppButton, AlertCircleIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -15,7 +15,7 @@ export function PagoFallidoScreen({ onNavigate }: PagoFallidoScreenProps) {
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={[styles.content, { alignItems: 'center' }]}>
           <View style={[styles.iconCircle, { backgroundColor: Colors.redLight, marginBottom: 20 }]}>
-            <Text style={{ fontSize: 40 }}>❗</Text>
+            <AlertCircleIcon size={40} color={Colors.red} />
           </View>
           <Text style={[styles.screenTitle, { textAlign: 'center' }]}>Transacción fallida</Text>
           <Text style={[styles.subtitle, { textAlign: 'center' }]}>

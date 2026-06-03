@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Image, SafeAreaView, StyleSheet } from 'react-native';
-import { AppHeader } from '../components';
+import { AppHeader, ShieldIcon, ReceiptIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -28,8 +28,9 @@ export function DetalleAdjudicacionScreen({ onNavigate }: DetalleAdjudicacionScr
                   <Text style={[styles.adjStatus, { color: statusColor }]}>{status}</Text>
                 </View>
               </View>
-              <View style={[styles.badge, { backgroundColor: Colors.blueLight }]}>
-                <Text style={[styles.badgeText, { color: Colors.primary }]}>🛡️ Sentinel Certified</Text>
+              <View style={[styles.badge, styles.certBadge]}>
+                <ShieldIcon size={12} color={Colors.primary} />
+                <Text style={[styles.badgeText, { color: Colors.primary, marginLeft: 5 }]}>Sentinel Certified</Text>
               </View>
             </View>
 
@@ -52,7 +53,7 @@ export function DetalleAdjudicacionScreen({ onNavigate }: DetalleAdjudicacionScr
 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: Colors.gray3 }}>
             <Text style={{ color: Colors.gray, fontSize: 16, flex: 1 }}>Gestionaremos la entrega por correo electrónico.</Text>
-            <Text style={{ fontSize: 20 }}>📋</Text>
+            <ReceiptIcon size={20} color={Colors.gray} />
           </View>
         </View>
       </ScrollView>
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
   adjImage: { width: '100%', height: 200 },
   adjImageLabel: { position: 'absolute', bottom: 12, left: 12, color: Colors.white, fontSize: 18, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16 },
+  certBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.blueLight },
   badgeText: { fontSize: 11, fontWeight: '700' },
   offerLabel: { fontSize: 10, color: Colors.gray, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
   bidPrice: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 4 },

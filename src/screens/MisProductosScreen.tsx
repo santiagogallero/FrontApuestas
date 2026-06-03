@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, BottomNav, StatusBadge } from '../components';
+import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon } from '../components';
 import { useProductos } from '../hooks';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
@@ -17,7 +17,7 @@ interface MisProductosScreenProps {
   onNavigate: NavigateFn;
 }
 
-const FILTERS = ['Todos', 'Disponibles', 'No disponibles'];
+const FILTERS = ['Todos', 'Vendidos', 'Pendientes'];
 
 export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
   const [filter, setFilter] = useState('Todos');
@@ -25,14 +25,22 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
 
   const filtered = filter === 'Todos'
     ? productos
-    : productos.filter((p) => filter === 'Disponibles' ? p.disponible : !p.disponible);
+    : productos.filter((p) => filter === 'Vendidos' ? !p.disponible : p.disponible);
 
   const vendidos = productos.filter((p) => !p.disponible).length;
   const pendientes = productos.filter((p) => p.disponible).length;
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="Mis productos" onBack={() => onNavigate('cuenta')} />
+      <AppHeader
+        title="Mis productos"
+        onBack={() => onNavigate('cuenta')}
+        right={
+          <TouchableOpacity style={styles.addBtn} onPress={() => onNavigate('publicarArticulo')}>
+            <PlusIcon size={20} color={Colors.white} />
+          </TouchableOpacity>
+        }
+      />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.statsRow}>
@@ -45,7 +53,7 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
               <Text style={[styles.statValue, { color: Colors.green }]}>{vendidos}</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>DISPONIBLES</Text>
+              <Text style={styles.statLabel}>PENDIENTES</Text>
               <Text style={styles.statValue}>{pendientes}</Text>
             </View>
           </View>
@@ -75,7 +83,7 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
             return (
               <View key={item.id} style={styles.offerCard}>
                 <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
-                  <Text style={{ fontSize: 28 }}>📦</Text>
+                  <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
                 </View>
                 <View style={styles.offerBody}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -88,6 +96,9 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
                       <Text style={{ color: Colors.gray2, fontSize: 12, marginTop: 2 }} numberOfLines={2}>{item.descripcionCompleta}</Text>
                     ) : null}
                   </View>
+                  <TouchableOpacity onPress={() => onNavigate('detalleAdjudicacion')}>
+                    <Text style={styles.verDetalle}>Ver detalle</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             );
@@ -116,4 +127,6 @@ const styles = StyleSheet.create({
   offerImage: { width: 80, height: 80, borderRadius: 14 },
   offerBody: { flex: 1, marginLeft: 14 },
   offerTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark, flex: 1, marginRight: 8 },
+  verDetalle: { color: Colors.red, fontSize: 13, fontWeight: '700', marginTop: 8, textDecorationLine: 'underline' },
+  addBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center' },
 });

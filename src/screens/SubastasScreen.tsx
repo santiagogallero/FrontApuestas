@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, BottomNav } from '../components';
+import { AppHeader, BottomNav, GavelIcon, CalendarIcon, MapPinIcon } from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useSubastas } from '../hooks';
 import { Colors } from '../theme/colors';
@@ -67,7 +67,7 @@ export function SubastasScreen({ onNavigate }: SubastasScreenProps) {
               >
                 <View style={styles.imageWrap}>
                   <View style={[styles.image, { backgroundColor: Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={{ fontSize: 40 }}>🔨</Text>
+                    <GavelIcon size={56} color={Colors.primary} strokeWidth={1.6} />
                   </View>
                   <View style={styles.badges}>
                     <View style={[styles.badge, isLive ? styles.badgeLive : styles.badgeUpcoming]}>
@@ -83,9 +83,15 @@ export function SubastasScreen({ onNavigate }: SubastasScreenProps) {
                 <View style={styles.body}>
                   <Text style={styles.cardTitle}>Subasta #{item.id}</Text>
                   <View style={styles.meta}>
-                    <Text style={styles.metaText}>🗓 {item.fecha} {item.hora}</Text>
-                    {item.ubicacion ? <Text style={styles.metaText}>📍 {item.ubicacion}</Text> : null}
+                    <CalendarIcon size={14} color={Colors.gray} />
+                    <Text style={styles.metaText}>{item.fecha} {item.hora}</Text>
                   </View>
+                  {item.ubicacion ? (
+                    <View style={styles.meta}>
+                      <MapPinIcon size={14} color={Colors.gray} />
+                      <Text style={styles.metaText}>{item.ubicacion}</Text>
+                    </View>
+                  ) : null}
                   <View style={styles.footer}>
                     <View />
                     <TouchableOpacity style={styles.button} onPress={() => onNavigate('detalleSubasta', { subasta: item })}>
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
   body: { padding: 16 },
   cardTitle: { fontSize: 18, fontWeight: '700', color: Colors.dark },
   meta: { marginTop: 6, flexDirection: 'row', alignItems: 'center' },
-  metaText: { color: Colors.gray, fontSize: 13 },
+  metaText: { color: Colors.gray, fontSize: 13, marginLeft: 6 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   button: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
   buttonText: { color: Colors.white, fontSize: 14, fontWeight: '600' },

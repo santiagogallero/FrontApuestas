@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
-import { AppHeader } from '../components';
+import { AppHeader, ShieldIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -15,7 +15,7 @@ export function SegurosScreen({ onNavigate }: SegurosScreenProps) {
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={[styles.iconCircle, { alignSelf: 'center', marginBottom: 20 }]}>
-            <Text style={{ fontSize: 40 }}>🛡️</Text>
+            <ShieldIcon size={36} color={Colors.primary} />
           </View>
           <Text style={[styles.screenTitle, { textAlign: 'center' }]}>Tu confianza, asegurada</Text>
           <Text style={[styles.subtitle, { textAlign: 'center' }]}>

@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, BottomNav, StatusBadge } from '../components';
+import { AppHeader, BottomNav, StatusBadge, GavelIcon } from '../components';
 import { usePagos } from '../hooks';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
@@ -33,11 +33,11 @@ export function VentasScreen({ onNavigate }: VentasScreenProps) {
         <View style={styles.content}>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>TOTAL REGISTROS</Text>
+              <Text style={styles.statLabel}>OFERTAS TOTALES</Text>
               <Text style={styles.statValue}>{pagos.length}</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>MONTO TOTAL</Text>
+              <Text style={styles.statLabel}>DINERO EN SUBASTAS ACTIVAS</Text>
               <Text style={[styles.statValue, { color: Colors.green }]}>$ {totalMonto.toLocaleString()}</Text>
             </View>
           </View>
@@ -66,7 +66,7 @@ export function VentasScreen({ onNavigate }: VentasScreenProps) {
             return (
               <View key={item.registroSubastaId} style={styles.offerCard}>
                 <View style={[styles.offerImage, { backgroundColor: Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
-                  <Text style={{ fontSize: 28 }}>🔨</Text>
+                  <GavelIcon size={32} color={Colors.primary} strokeWidth={1.7} />
                 </View>
                 <View style={styles.offerBody}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -88,7 +88,7 @@ export function VentasScreen({ onNavigate }: VentasScreenProps) {
                   <View style={{ marginTop: 8 }}>
                     <Text style={{ color: Colors.gray, fontSize: 12 }}>Vence: {item.fechaVencimiento ?? '—'}</Text>
                     {item.bloqueado && (
-                      <Text style={{ color: Colors.red, fontSize: 12, marginTop: 2 }}>⚠️ Cuenta bloqueada</Text>
+                      <Text style={{ color: Colors.red, fontSize: 12, marginTop: 2, fontWeight: '700' }}>Cuenta bloqueada</Text>
                     )}
                   </View>
                 </View>
