@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 
 interface AppInputProps {
@@ -8,9 +8,18 @@ interface AppInputProps {
   value: string;
   onChangeText: (text: string) => void;
   secure?: boolean;
-  iconLeft?: string;
-  iconRight?: string;
+  iconLeft?: React.ReactNode;
+  iconRight?: React.ReactNode;
+  onIconRightPress?: () => void;
   keyboardType?: 'default' | 'email-address' | 'numeric';
+}
+
+function renderIcon(icon: React.ReactNode, style: object) {
+  if (icon == null) return null;
+  if (typeof icon === 'string' || typeof icon === 'number') {
+    return <Text style={[styles.icon, style]}>{icon}</Text>;
+  }
+  return <View style={[styles.iconNode, style]}>{icon}</View>;
 }
 
 export function AppInput({
@@ -21,13 +30,14 @@ export function AppInput({
   secure,
   iconLeft,
   iconRight,
+  onIconRightPress,
   keyboardType = 'default',
 }: AppInputProps) {
   return (
     <View style={styles.wrap}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={styles.box}>
-        {iconLeft && <Text style={[styles.icon, styles.iconLeft]}>{iconLeft}</Text>}
+        {renderIcon(iconLeft, styles.iconLeft)}
         <TextInput
           style={[styles.field, { paddingLeft: iconLeft ? 40 : 16 }]}
           placeholder={placeholder}
@@ -38,7 +48,15 @@ export function AppInput({
           keyboardType={keyboardType}
           autoCapitalize="none"
         />
-        {iconRight && <Text style={[styles.icon, styles.iconRight]}>{iconRight}</Text>}
+        {iconRight != null && (
+          onIconRightPress ? (
+            <TouchableOpacity style={[styles.iconNode, styles.iconRight]} onPress={onIconRightPress} hitSlop={8}>
+              {typeof iconRight === 'string' ? <Text style={styles.icon}>{iconRight}</Text> : iconRight}
+            </TouchableOpacity>
+          ) : (
+            renderIcon(iconRight, styles.iconRight)
+          )
+        )}
       </View>
     </View>
   );
@@ -73,6 +91,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.gray2,
     zIndex: 1,
+  },
+  iconNode: {
+    position: 'absolute',
+    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconLeft: {
     left: 14,

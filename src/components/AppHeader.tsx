@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar as RNStatusBar } from 'react-native';
 import { Logo } from './Logo';
+import { ArrowLeftIcon } from './icons';
 import { Colors } from '../theme/colors';
 
 interface AppHeaderProps {
@@ -12,17 +13,17 @@ interface AppHeaderProps {
 export function AppHeader({ title, onBack, right }: AppHeaderProps) {
   return (
     <View style={styles.header}>
-      {onBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.side}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.side}>
-          <Logo size={28} />
-        </View>
-      )}
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.side}>{right}</View>
+      <View style={styles.left}>
+        {onBack ? (
+          <TouchableOpacity onPress={onBack} hitSlop={8} style={styles.backBtn}>
+            <ArrowLeftIcon size={22} color={Colors.primary} />
+          </TouchableOpacity>
+        ) : (
+          <Logo size={26} />
+        )}
+        <Text style={[styles.title, onBack && styles.titleBack]}>{title}</Text>
+      </View>
+      {right ? <View style={styles.right}>{right}</View> : null}
     </View>
   );
 }
@@ -31,26 +32,31 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: (RNStatusBar.currentHeight || 0) + 12,
     paddingBottom: 12,
     backgroundColor: Colors.bg,
   },
-  side: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  backText: {
-    fontSize: 24,
-    color: Colors.primary,
+  backBtn: {
+    marginRight: 4,
   },
   title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: Colors.primary,
-    textAlign: 'center',
+    marginLeft: 10,
+  },
+  titleBack: {
+    fontSize: 18,
+    marginLeft: 6,
+  },
+  right: {
+    marginLeft: 12,
   },
 });
