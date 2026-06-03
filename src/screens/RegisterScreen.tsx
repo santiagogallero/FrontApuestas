@@ -8,10 +8,24 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { AppButton, AppInput, Logo } from '../components';
+import { AppButton, AppInput, AppSelect, Logo, MapPinIcon } from '../components';
 import { apiRegisterStage1 } from '../api';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
+
+const PAISES = [
+  'Argentina',
+  'Brasil',
+  'Chile',
+  'Uruguay',
+  'Paraguay',
+  'Bolivia',
+  'Perú',
+  'Colombia',
+  'México',
+  'España',
+  'Estados Unidos',
+];
 
 interface RegisterScreenProps {
   onNavigate: NavigateFn;
@@ -25,7 +39,7 @@ export function RegisterScreen({ onNavigate }: RegisterScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [documento, setDocumento] = useState('');
   const [domicilioLegal, setDomicilioLegal] = useState('');
-  const [paisOrigen, setPaisOrigen] = useState('');
+  const [paisOrigen, setPaisOrigen] = useState('Argentina');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -64,17 +78,21 @@ export function RegisterScreen({ onNavigate }: RegisterScreenProps) {
         </View>
 
         <View style={styles.content}>
-          <Text style={[styles.title, { fontSize: 32 }]}>Registro 1/2</Text>
-          <Text style={styles.subtitle}>Auction Pulse Pro.</Text>
+          <Text style={styles.eyebrow}>VERIFICACIÓN DE IDENTIDAD</Text>
+          <Text style={styles.title}>Registro 1/2{'\n'}Auction Pulse Pro.</Text>
 
-          <AppInput label="NOMBRE" placeholder="Ej. Alejandro" value={firstName} onChangeText={setFirstName} />
-          <AppInput label="APELLIDO" placeholder="Ej. Rossi" value={lastName} onChangeText={setLastName} />
-          <AppInput label="CORREO ELECTRÓNICO" placeholder="tu@correo.com" value={email} onChangeText={setEmail} keyboardType="email-address" />
-          <AppInput label="CONTRASEÑA" placeholder="••••••••" value={password} onChangeText={setPassword} secure />
-          <AppInput label="CONFIRMAR CONTRASEÑA" placeholder="••••••••" value={confirmPassword} onChangeText={setConfirmPassword} secure />
-          <AppInput label="DOCUMENTO (DNI / PASAPORTE)" placeholder="Ej. 12345678" value={documento} onChangeText={setDocumento} keyboardType="numeric" />
-          <AppInput label="DOMICILIO LEGAL" placeholder="Calle 123, Ciudad" value={domicilioLegal} onChangeText={setDomicilioLegal} />
-          <AppInput label="PAÍS DE ORIGEN" placeholder="Ej. Argentina" value={paisOrigen} onChangeText={setPaisOrigen} />
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Datos Personales</Text>
+
+            <AppInput label="NOMBRE" placeholder="Ej. Alejandro" value={firstName} onChangeText={setFirstName} />
+            <AppInput label="APELLIDO" placeholder="Ej. Rossi" value={lastName} onChangeText={setLastName} />
+            <AppInput label="CORREO ELECTRÓNICO" placeholder="tu@correo.com" value={email} onChangeText={setEmail} keyboardType="email-address" />
+            <AppInput label="CONTRASEÑA" placeholder="••••••••" value={password} onChangeText={setPassword} secure />
+            <AppInput label="CONFIRMAR CONTRASEÑA" placeholder="••••••••" value={confirmPassword} onChangeText={setConfirmPassword} secure />
+            <AppInput label="DOCUMENTO (DNI / PASAPORTE)" placeholder="Ej. 12345678" value={documento} onChangeText={setDocumento} keyboardType="numeric" />
+            <AppInput label="DOMICILIO LEGAL" placeholder="Calle, Número, Ciudad" value={domicilioLegal} onChangeText={setDomicilioLegal} iconLeft={<MapPinIcon size={18} />} />
+            <AppSelect label="PAÍS DE ORIGEN" value={paisOrigen} options={PAISES} onChange={setPaisOrigen} />
+          </View>
 
           <AppButton title="Enviar documentacion" icon="→" onPress={handleRegister} loading={loading} />
 
@@ -94,8 +112,39 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 8 },
   brand: { fontSize: 18, fontWeight: '700', color: Colors.dark, marginLeft: 10 },
   content: { paddingHorizontal: 20, paddingVertical: 20 },
-  title: { fontSize: 36, fontWeight: 'bold', color: Colors.dark, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: Colors.gray, marginBottom: 28, lineHeight: 22 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 32, alignItems: 'center' },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.primary,
+    letterSpacing: 1.5,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: '900',
+    color: Colors.dark,
+    marginBottom: 24,
+    lineHeight: 44,
+    textShadowColor: 'rgba(15,23,42,0.18)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 1,
+  },
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.dark,
+    marginBottom: 20,
+  },
+  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, alignItems: 'center' },
   footerText: { color: Colors.gray, fontSize: 14 },
 });

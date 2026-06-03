@@ -6,9 +6,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { AppButton, AppInput, Logo } from '../components';
+import { AppButton, AppInput, Logo, AtIcon, LockIcon, EyeIcon } from '../components';
 import { useAuth } from '../hooks';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
@@ -20,6 +21,7 @@ interface LoginScreenProps {
 export function LoginScreen({ onNavigate }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
@@ -48,34 +50,47 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>Bienvenido</Text>
-          <Text style={styles.subtitle}>Inicia sesion para ver tu dashboard profesional de subastas</Text>
+          <View style={styles.card}>
+            <Text style={styles.title}>Bienvenido</Text>
+            <Text style={styles.subtitle}>Inicia sesion para ver tu dashboard profesional de subastas</Text>
 
-          <AppInput
-            label="CORREO"
-            placeholder="name@firm.com"
-            value={email}
-            onChangeText={setEmail}
-            iconLeft="@"
-            keyboardType="email-address"
-          />
-          <AppInput
-            label="CONTRASEÑA"
-            placeholder="••••••••"
-            value={password}
-            onChangeText={setPassword}
-            secure
-            iconLeft="🔒"
-            iconRight="👁"
-          />
+            <AppInput
+              label="CORREO"
+              placeholder="name@firm.com"
+              value={email}
+              onChangeText={setEmail}
+              iconLeft={<AtIcon size={18} />}
+              keyboardType="email-address"
+            />
+            <AppInput
+              label="CONTRASEÑA"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              secure={!showPassword}
+              iconLeft={<LockIcon size={18} />}
+              iconRight={<EyeIcon size={18} color={showPassword ? Colors.primary : Colors.gray2} />}
+              onIconRightPress={() => setShowPassword(!showPassword)}
+            />
 
-          <AppButton title="Iniciar Sesión" icon="→" onPress={handleLogin} loading={loading} />
+            <TouchableOpacity onPress={() => onNavigate('recuperarCuenta')}>
+              <Text style={styles.forgot}>¿OLVIDASTE TU CONTRASEÑA?</Text>
+            </TouchableOpacity>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Eres nuevo? </Text>
-            <AppButton title="Registrate" variant="outline" onPress={() => onNavigate('register')} />
+            <AppButton title="Iniciar Sesión" icon="→" onPress={handleLogin} loading={loading} />
+
+            <View style={styles.divider} />
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Eres nuevo? </Text>
+              <TouchableOpacity onPress={() => onNavigate('register')}>
+                <Text style={styles.link}>Registrate</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.guestWrap} onPress={() => onNavigate('subastas')}>
+              <Text style={styles.guestLink}>Continuar sin logearte</Text>
+            </TouchableOpacity>
           </View>
-          <AppButton title="Continuar sin logearte" variant="outline" onPress={() => onNavigate('subastas')} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -88,8 +103,35 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 8 },
   brand: { fontSize: 18, fontWeight: '700', color: Colors.dark, marginLeft: 10 },
   content: { paddingHorizontal: 20, paddingVertical: 20 },
-  title: { fontSize: 36, fontWeight: 'bold', color: Colors.dark, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: Colors.gray, marginBottom: 28, lineHeight: 22 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 32, alignItems: 'center' },
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  title: { fontSize: 34, fontWeight: '800', color: Colors.dark, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 15, color: Colors.gray, textAlign: 'center', marginBottom: 28, lineHeight: 22, paddingHorizontal: 8 },
+  forgot: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.primary,
+    letterSpacing: 0.8,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.gray4,
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   footerText: { color: Colors.gray, fontSize: 14 },
+  link: { color: Colors.primary, fontSize: 14, fontWeight: '700' },
+  guestWrap: { alignItems: 'center', marginTop: 14 },
+  guestLink: { color: Colors.primary, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
 });
