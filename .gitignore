@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# artefactos de diseño (insumos de matcheo Figma, no parte de la app)
+export_figma.png
+.figma_crops/
