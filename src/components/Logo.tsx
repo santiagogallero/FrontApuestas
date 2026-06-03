@@ -1,28 +1,58 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../theme/colors';
 
 interface LogoProps {
   size?: number;
+  color?: string;
+  strokeWidth?: number;
 }
 
-export function Logo({ size = 32 }: LogoProps) {
+/**
+ * Logo de marca: martillo de subasta (gavel) dibujado con SVG.
+ * Reemplaza el emoji ⚡ anterior para matchear el diseño de Figma.
+ */
+export function Logo({ size = 32, color = Colors.primary, strokeWidth = 2.2 }: LogoProps) {
   return (
-    <View style={[styles.box, { width: size, height: size }]}>
-      <Text style={[styles.text, { fontSize: size * 0.5 }]}>⚡</Text>
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Mango del mazo */}
+      <Path
+        d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Base / sound block */}
+      <Path
+        d="m16 16 6-6"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="m8 8 6-6"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Cabeza del mazo (trazos cruzados) */}
+      <Path
+        d="m9 7 8 8"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="m21 11-8-8"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
-
-const styles = StyleSheet.create({
-  box: {
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    color: Colors.white,
-    fontWeight: 'bold',
-  },
-});
