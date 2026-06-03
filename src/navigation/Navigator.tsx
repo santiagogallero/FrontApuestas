@@ -21,6 +21,14 @@ import {
   PagoExitosoScreen,
   PagoFallidoScreen,
   ChatSoporteScreen,
+  PublicarArticuloScreen,
+  AgregarMetodoPagoScreen,
+  AgregarTarjetaScreen,
+  AgregarCuentaBancariaScreen,
+  VerificarChequeScreen,
+  FaltaMetodoPagoScreen,
+  AccesoPlatinoScreen,
+  UsuarioHabilitadoScreen,
 } from '../screens';
 import type { ScreenName, ScreenParams, NavState, NavigateFn } from '../types/navigation';
 
@@ -80,6 +88,22 @@ export function Navigator() {
       return <PagoFallidoScreen onNavigate={navigate} />;
     case 'chatSoporte':
       return <ChatSoporteScreen onNavigate={navigate} />;
+    case 'publicarArticulo':
+      return <PublicarArticuloScreen onNavigate={navigate} />;
+    case 'agregarMetodoPago':
+      return <AgregarMetodoPagoScreen onNavigate={navigate} />;
+    case 'agregarTarjeta':
+      return <AgregarTarjetaScreen onNavigate={navigate} />;
+    case 'agregarCuentaBancaria':
+      return <AgregarCuentaBancariaScreen onNavigate={navigate} />;
+    case 'verificarCheque':
+      return <VerificarChequeScreen onNavigate={navigate} />;
+    case 'faltaMetodoPago':
+      return <FaltaMetodoPagoScreen onNavigate={navigate} />;
+    case 'accesoPlatino':
+      return <AccesoPlatinoScreen onNavigate={navigate} />;
+    case 'usuarioHabilitado':
+      return <UsuarioHabilitadoScreen onNavigate={navigate} />;
     default:
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

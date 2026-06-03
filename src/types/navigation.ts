@@ -17,7 +17,15 @@ export type ScreenName =
   | 'finalizarCompra'
   | 'pagoExitoso'
   | 'pagoFallido'
-  | 'chatSoporte';
+  | 'chatSoporte'
+  | 'publicarArticulo'
+  | 'agregarMetodoPago'
+  | 'agregarTarjeta'
+  | 'agregarCuentaBancaria'
+  | 'verificarCheque'
+  | 'faltaMetodoPago'
+  | 'accesoPlatino'
+  | 'usuarioHabilitado';
 
 export type ScreenParams = {
   splash: undefined;
@@ -39,6 +47,14 @@ export type ScreenParams = {
   pagoExitoso: undefined;
   pagoFallido: undefined;
   chatSoporte: undefined;
+  publicarArticulo: undefined;
+  agregarMetodoPago: undefined;
+  agregarTarjeta: undefined;
+  agregarCuentaBancaria: undefined;
+  verificarCheque: undefined;
+  faltaMetodoPago: undefined;
+  accesoPlatino: undefined;
+  usuarioHabilitado: undefined;
 };
 
 import type { Subasta } from './subasta';
