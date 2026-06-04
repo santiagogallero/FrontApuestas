@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-export const API_BASE = 'http://localhost:8080';
+// El backend corre en la PC (localhost:8080). Desde el emulador de Android,
+// "localhost" es el propio emulador, no la PC: hay que usar la IP especial 10.0.2.2.
+// En web/iOS-simulador, localhost sí apunta a la PC.
+export const API_BASE = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -43,7 +47,12 @@ export async function apiPost<T>(
     throw new Error(text || `Error ${res.status}`);
   }
   const text = await res.text();
-  return (text ? JSON.parse(text) : null) as T;
+  if (!text) return null as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 export async function apiGet<T>(path: string): Promise<T> {

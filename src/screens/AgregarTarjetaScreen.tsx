@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { AppHeader, AppButton, AppInput } from '../components';
 import { Colors } from '../theme/colors';
+import { apiRegisterPaymentMethods } from '../api';
 import type { NavigateFn } from '../types/navigation';
 
 interface Props {
@@ -22,10 +23,21 @@ export function AgregarTarjetaScreen({ onNavigate }: Props) {
   const [numero, setNumero] = useState('');
   const [caducidad, setCaducidad] = useState('');
   const [cvv, setCvv] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const guardar = () => {
-    Alert.alert('Tarjeta', 'Tarjeta enviada para verificación');
-    onNavigate('billetera');
+  const guardar = async () => {
+    const ultimos4 = numero.replace(/\s/g, '').slice(-4) || '****';
+    const alias = `Tarjeta terminada en ${ultimos4}`;
+    setLoading(true);
+    try {
+      await apiRegisterPaymentMethods([{ tipo: 'CREDIT_CARD', aliasDescripcion: alias, moneda: 'ARS' }]);
+      Alert.alert('Listo', 'Tarjeta enviada para verificación');
+      onNavigate('billetera');
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'No se pudo registrar la tarjeta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,7 +72,7 @@ export function AgregarTarjetaScreen({ onNavigate }: Props) {
             <AppInput label="FECHA DE CADUCIDAD (MM/AA)" placeholder="MM/YY" value={caducidad} onChangeText={setCaducidad} />
             <AppInput label="CVV" placeholder="•••" value={cvv} onChangeText={setCvv} keyboardType="numeric" secure />
 
-            <AppButton title="Verificar y guardar la tarjeta" icon="→" onPress={guardar} />
+            <AppButton title={loading ? 'Enviando...' : 'Verificar y guardar la tarjeta'} icon="→" onPress={guardar} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

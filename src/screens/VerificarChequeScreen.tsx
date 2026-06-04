@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { AppHeader, AppButton, AppInput, CameraIcon, FileIcon, InfoIcon, ShieldIcon } from '../components';
 import { Colors } from '../theme/colors';
+import { apiRegisterPaymentMethods } from '../api';
 import type { NavigateFn } from '../types/navigation';
 
 interface Props {
@@ -21,6 +22,22 @@ export function VerificarChequeScreen({ onNavigate }: Props) {
   const [paso, setPaso] = useState<1 | 2>(1);
   const [monto, setMonto] = useState('');
   const [numero, setNumero] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const enviarCheque = async () => {
+    const alias = `Cheque certificado Nro. ${numero || 'S/N'}`;
+    const montoGarantia = parseFloat(monto) || undefined;
+    setLoading(true);
+    try {
+      await apiRegisterPaymentMethods([{ tipo: 'CERTIFIED_CHECK', aliasDescripcion: alias, moneda: 'ARS', montoGarantia }]);
+      Alert.alert('Listo', 'Cheque enviado para verificación');
+      onNavigate('billetera');
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'No se pudo registrar el cheque');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,7 +86,7 @@ export function VerificarChequeScreen({ onNavigate }: Props) {
                   <Text style={styles.hintText}>La verificación suele tardar entre 2 y 4 horas hábiles durante las sesiones de mercado.</Text>
                 </View>
 
-                <AppButton title="Submit for Verification" icon="→" onPress={() => { Alert.alert('Cheque', 'Enviado para verificación'); onNavigate('billetera'); }} />
+                <AppButton title={loading ? 'Enviando...' : 'Submit for Verification'} icon="→" onPress={enviarCheque} />
 
                 <View style={styles.footer}>
                   <View style={styles.footerLeft}>

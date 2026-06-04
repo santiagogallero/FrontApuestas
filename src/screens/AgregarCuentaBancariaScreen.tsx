@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { AppHeader, AppButton, AppInput, AppSelect, InfoIcon } from '../components';
 import { Colors } from '../theme/colors';
+import { apiRegisterPaymentMethods } from '../api';
 import type { NavigateFn } from '../types/navigation';
 
 interface Props {
@@ -29,10 +30,22 @@ export function AgregarCuentaBancariaScreen({ onNavigate }: Props) {
   const [cbu, setCbu] = useState('');
   const [pais, setPais] = useState('Argentina');
   const [divisa, setDivisa] = useState('USD ($)');
+  const [loading, setLoading] = useState(false);
 
-  const guardar = () => {
-    Alert.alert('Cuenta bancaria', 'Cuenta enviada para verificación');
-    onNavigate('billetera');
+  const guardar = async () => {
+    const ultimos4 = cbu.replace(/\s/g, '').slice(-4) || '****';
+    const alias = `Cuenta ${banco !== 'Seleccionar Institución' ? banco : 'bancaria'} terminada en ${ultimos4}`;
+    const moneda = divisa.includes('USD') ? 'USD' : 'ARS';
+    setLoading(true);
+    try {
+      await apiRegisterPaymentMethods([{ tipo: 'BANK_ACCOUNT', aliasDescripcion: alias, moneda }]);
+      Alert.alert('Listo', 'Cuenta enviada para verificación');
+      onNavigate('billetera');
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'No se pudo registrar la cuenta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,7 +85,7 @@ export function AgregarCuentaBancariaScreen({ onNavigate }: Props) {
             <AppSelect label="PAIS" value={pais} options={PAISES} onChange={setPais} />
             <AppSelect label="DIVISA" value={divisa} options={DIVISAS} onChange={setDivisa} />
 
-            <AppButton title="Agregar cuenta bancaria" onPress={guardar} />
+            <AppButton title={loading ? 'Enviando...' : 'Agregar cuenta bancaria'} onPress={guardar} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

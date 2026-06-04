@@ -35,5 +35,5 @@ export async function apiGetMe(): Promise<CurrentUser> {
 export async function apiRegisterPaymentMethods(
   mediosDePago: Array<{ tipo: string; aliasDescripcion: string; moneda: string; montoGarantia?: number }>
 ): Promise<string> {
-  return apiPost<string>('/api/auth/payment-methods', { mediosDePago }, true);
+  return apiPost<string>('/api/auth/payment-methods', { mediosPago: mediosDePago }, true);
 }
