@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// El backend corre en la PC (localhost:8080). Desde el emulador de Android,
-// "localhost" es el propio emulador, no la PC: hay que usar la IP especial 10.0.2.2.
-// En web/iOS-simulador, localhost sí apunta a la PC.
-export const API_BASE = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+// IP de la PC en la red local. En Android emulador se usa la IP especial 10.0.2.2.
+// En dispositivo físico (iOS o Android real) hay que usar la IP de la PC en la red.
+const PC_IP = '192.168.1.11';
+export const API_BASE = Platform.OS === 'android' ? `http://10.0.2.2:8080` : `http://${PC_IP}:8080`;
 
 const TOKEN_KEY = 'auth_token';
 

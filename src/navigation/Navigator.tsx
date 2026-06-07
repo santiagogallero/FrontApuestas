@@ -34,14 +34,16 @@ import type { ScreenName, ScreenParams, NavState, NavigateFn } from '../types/na
 
 export function Navigator() {
   const [nav, setNav] = useState<NavState>({ screen: 'splash' });
-  const { isLoading } = useAuthContext();
+  const { isLoading, token } = useAuthContext();
+
+  const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'accountPending', 'recuperarCuenta'];
 
   useEffect(() => {
     if (isLoading) return;
-    if (nav.screen === 'splash') {
+    if (!token && !AUTH_SCREENS.includes(nav.screen)) {
       setNav({ screen: 'login' });
     }
-  }, [isLoading, nav.screen]);
+  }, [isLoading, token, nav.screen]);
 
   const navigate: NavigateFn = (screen, params) => {
     setNav({ screen, params } as NavState);
