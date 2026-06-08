@@ -38,6 +38,7 @@ export function Navigator() {
   const { isLoading, token } = useAuthContext();
 
   const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'accountPending', 'recuperarCuenta'];
+  const GUEST_SCREENS: ScreenName[] = ['subastas', 'detalleSubasta', ...AUTH_SCREENS];
 
   useEffect(() => {
     if (isLoading) return;
@@ -46,13 +47,13 @@ export function Navigator() {
     }
   }, [isLoading, token, guest, nav.screen]);
 
-  // Al hacer logout volvemos a modo autenticado (no guest)
   useEffect(() => {
     if (!token) setGuest(false);
   }, [token]);
 
   const navigate: NavigateFn = (screen, params) => {
-    if (screen === 'login') setGuest(false);
+    if (screen === 'login') { setGuest(false); setNav({ screen }); return; }
+    if (guest && !GUEST_SCREENS.includes(screen)) { setGuest(false); setNav({ screen: 'login' }); return; }
     setNav({ screen, params } as NavState);
   };
 
@@ -77,7 +78,7 @@ export function Navigator() {
     case 'recuperarCuenta':
       return <RecuperarCuentaScreen onNavigate={navigate} />;
     case 'subastas':
-      return <SubastasScreen onNavigate={navigate} />;
+      return <SubastasScreen onNavigate={navigate} isGuest={guest} />;
     case 'detalleSubasta':
       return <DetalleSubastaScreen onNavigate={navigate} params={params as ScreenParams['detalleSubasta']} />;
     case 'billetera':

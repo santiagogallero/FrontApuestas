@@ -16,11 +16,12 @@ import type { NavigateFn } from '../types/navigation';
 
 interface SubastasScreenProps {
   onNavigate: NavigateFn;
+  isGuest?: boolean;
 }
 
 const FILTERS = ['Todas', 'Común', 'Plata', 'Oro', 'Platino'];
 
-export function SubastasScreen({ onNavigate }: SubastasScreenProps) {
+export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const { currentUser } = useAuthContext();
   const { filtered, loading, filter, setFilter } = useSubastas();
 
@@ -104,7 +105,7 @@ export function SubastasScreen({ onNavigate }: SubastasScreenProps) {
           })}
         </View>
       </ScrollView>
-      <BottomNav active="subastas" onNavigate={onNavigate} />
+      <BottomNav active="subastas" onNavigate={onNavigate} isGuest={isGuest} />
     </SafeAreaView>
   );
 }
