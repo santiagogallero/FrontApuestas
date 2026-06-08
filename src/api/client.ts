@@ -43,8 +43,7 @@ export async function apiPost<T>(
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Error ${res.status}`);
+    throw new Error(await extractErrorMessage(res));
   }
   const text = await res.text();
   if (!text) return null as T;
@@ -59,8 +58,16 @@ export async function apiGet<T>(path: string): Promise<T> {
   const headers = await authHeaders();
   const res = await fetch(`${API_BASE}${path}`, { headers });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Error ${res.status}`);
+    throw new Error(await extractErrorMessage(res));
   }
   return res.json() as Promise<T>;
+}
+
+async function extractErrorMessage(res: Response): Promise<string> {
+  try {
+    const json = await res.json();
+    return json.message || json.error || `Error ${res.status}`;
+  } catch {
+    return `Error ${res.status}`;
+  }
 }

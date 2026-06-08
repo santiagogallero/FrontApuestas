@@ -18,6 +18,20 @@ interface LoginScreenProps {
   onNavigate: NavigateFn;
 }
 
+function friendlyLoginError(message: string): string {
+  if (!message) return 'Ocurrió un error inesperado. Intentá de nuevo.';
+  const m = message.toLowerCase();
+  if (m.includes('credenciales') || m.includes('unauthorized') || m.includes('401'))
+    return 'El email o la contraseña son incorrectos.';
+  if (m.includes('pendiente') || m.includes('aprobacion') || m.includes('forbidden') || m.includes('403'))
+    return 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando esté activa.';
+  if (m.includes('network') || m.includes('failed to fetch') || m.includes('connection'))
+    return 'No se pudo conectar al servidor. Verificá tu conexión a internet.';
+  if (m.includes('500') || m.includes('interno'))
+    return 'Hubo un problema en el servidor. Intentá de nuevo en unos minutos.';
+  return message;
+}
+
 export function LoginScreen({ onNavigate }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +49,8 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
       await login(email, password);
       onNavigate('subastas');
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Credenciales inválidas');
+      const msg = friendlyLoginError(e.message);
+      Alert.alert('No pudimos iniciar sesión', msg);
     } finally {
       setLoading(false);
     }
