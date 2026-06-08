@@ -5,27 +5,53 @@ const PORT = 8080;
 
 // ─── Datos de prueba ───
 const USERS = {
+  // ── Usuarios que funcionan ──
   'postor@auction.com': {
     password: 'Postor123!',
-    id: 2,
-    email: 'postor@auction.com',
-    estado: 'ACTIVO',
-    personaId: 2,
-    roles: ['POSTOR'],
-    categoria: 'PLATA',
+    id: 2, email: 'postor@auction.com', estado: 'ACTIVO',
+    personaId: 2, roles: ['POSTOR'], categoria: 'PLATA',
   },
   'admin@auction.com': {
     password: 'Admin123!',
-    id: 1,
-    email: 'admin@auction.com',
-    estado: 'ACTIVO',
-    personaId: 1,
-    roles: ['ADMIN'],
-    categoria: 'PLATINO',
+    id: 1, email: 'admin@auction.com', estado: 'ACTIVO',
+    personaId: 1, roles: ['ADMIN'], categoria: 'PLATINO',
+  },
+  'oro@auction.com': {
+    password: 'Postor123!',
+    id: 3, email: 'oro@auction.com', estado: 'ACTIVO',
+    personaId: 3, roles: ['POSTOR'], categoria: 'ORO',
+  },
+  'comun@auction.com': {
+    password: 'Postor123!',
+    id: 4, email: 'comun@auction.com', estado: 'ACTIVO',
+    personaId: 4, roles: ['POSTOR'], categoria: 'COMUN',
+  },
+  'moderador@auction.com': {
+    password: 'Mod123!',
+    id: 5, email: 'moderador@auction.com', estado: 'ACTIVO',
+    personaId: 5, roles: ['MODERADOR'], categoria: 'PLATINO',
+  },
+
+  // ── Usuarios que fallan ──
+  'inactivo@auction.com': {
+    password: 'Inactivo123!',
+    id: 10, email: 'inactivo@auction.com', estado: 'INACTIVO',
+    personaId: 10, roles: ['POSTOR'], categoria: 'COMUN',
+  },
+  'bloqueado@auction.com': {
+    password: 'Bloqueado123!',
+    id: 11, email: 'bloqueado@auction.com', estado: 'BLOQUEADO',
+    personaId: 11, roles: ['POSTOR'], categoria: 'PLATA',
+  },
+  'suspendido@auction.com': {
+    password: 'Suspendido123!',
+    id: 12, email: 'suspendido@auction.com', estado: 'SUSPENDIDO',
+    personaId: 12, roles: ['POSTOR'], categoria: 'ORO',
   },
 };
 
-let tokenStore = 'mock-jwt-token-12345';
+// token → email del usuario logueado
+const tokenStore = {};
 
 const SUBASTAS = [
   { id: 1, fecha: '2026-06-15', hora: '10:00:00', estado: 'ACTIVA', categoria: 'Oro', ubicacion: 'Salón Principal - Buenos Aires', capacidadAsistentes: 150 },
@@ -72,7 +98,8 @@ function readBody(req) {
 function getAuthEmail(req) {
   const auth = req.headers['authorization'] || '';
   if (auth.startsWith('Bearer ')) {
-    return USERS['postor@auction.com'].email; // mock: cualquier token válido = postor
+    const token = auth.slice(7);
+    return tokenStore[token] || null;
   }
   return null;
 }
@@ -98,8 +125,21 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 401, { error: 'Credenciales inválidas' });
       return;
     }
-    tokenStore = `mock-token-${Date.now()}`;
-    sendJson(res, 200, { token: tokenStore, tokenType: 'Bearer', expiresInSeconds: 7200, roles: user.roles });
+    if (user.estado === 'INACTIVO') {
+      sendJson(res, 403, { error: 'Cuenta inactiva. Contacte al administrador.' });
+      return;
+    }
+    if (user.estado === 'BLOQUEADO') {
+      sendJson(res, 403, { error: 'Cuenta bloqueada por incumplimiento de pagos.' });
+      return;
+    }
+    if (user.estado === 'SUSPENDIDO') {
+      sendJson(res, 403, { error: 'Cuenta suspendida temporalmente.' });
+      return;
+    }
+    const token = `mock-token-${Date.now()}`;
+    tokenStore[token] = user.email;
+    sendJson(res, 200, { token, tokenType: 'Bearer', expiresInSeconds: 7200, roles: user.roles });
     return;
   }
 
@@ -206,7 +246,16 @@ server.listen(PORT, () => {
   console.log('  GET  /api/compliance/mis-pagos');
   console.log('  GET  /api/health');
   console.log('');
-  console.log('👤 Usuarios de prueba:');
-  console.log('  postor@auction.com / Postor123!  (rol: POSTOR)');
-  console.log('  admin@auction.com  / Admin123!   (rol: ADMIN)');
+  console.log('👤 Usuarios que funcionan:');
+  console.log('  postor@auction.com     / Postor123!    (POSTOR, PLATA)');
+  console.log('  oro@auction.com        / Postor123!    (POSTOR, ORO)');
+  console.log('  comun@auction.com      / Postor123!    (POSTOR, COMUN)');
+  console.log('  moderador@auction.com  / Mod123!       (MODERADOR, PLATINO)');
+  console.log('  admin@auction.com      / Admin123!     (ADMIN, PLATINO)');
+  console.log('');
+  console.log('❌ Usuarios que fallan:');
+  console.log('  inactivo@auction.com   / Inactivo123!  → 403 Cuenta inactiva');
+  console.log('  bloqueado@auction.com  / Bloqueado123! → 403 Cuenta bloqueada');
+  console.log('  suspendido@auction.com / Suspendido123!→ 403 Cuenta suspendida');
+  console.log('  cualquiera             / wrongpass     → 401 Credenciales inválidas');
 });
