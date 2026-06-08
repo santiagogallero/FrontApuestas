@@ -52,6 +52,7 @@ export function Navigator() {
   }, [token]);
 
   const navigate: NavigateFn = (screen, params) => {
+    if (screen === 'login') setGuest(false);
     setNav({ screen, params } as NavState);
   };
 

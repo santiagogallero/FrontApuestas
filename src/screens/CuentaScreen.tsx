@@ -104,7 +104,7 @@ export function CuentaScreen({ onNavigate }: CuentaScreenProps) {
           </View>
 
           {/* Logout */}
-          <TouchableOpacity style={styles.logoutButton} onPress={onLogout} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.logoutButton} onPress={async () => { await onLogout(); onNavigate('login'); }} activeOpacity={0.8}>
             <LogOutIcon size={18} color={Colors.red} />
             <Text style={styles.logoutText}>FINALIZAR LA SESIÓN</Text>
           </TouchableOpacity>
