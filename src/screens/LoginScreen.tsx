@@ -15,6 +15,7 @@ import type { NavigateFn } from '../types/navigation';
 
 interface LoginScreenProps {
   onNavigate: NavigateFn;
+  onNavigateAsGuest: NavigateFn;
 }
 
 function friendlyLoginError(message: string): string {
@@ -31,7 +32,7 @@ function friendlyLoginError(message: string): string {
   return message;
 }
 
-export function LoginScreen({ onNavigate }: LoginScreenProps) {
+export function LoginScreen({ onNavigate, onNavigateAsGuest }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -109,7 +110,7 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
                 <Text style={styles.link}>Registrate</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.guestWrap} onPress={() => onNavigate('subastas')}>
+            <TouchableOpacity style={styles.guestWrap} onPress={() => onNavigateAsGuest('subastas')}>
               <Text style={styles.guestLink}>Continuar sin logearte</Text>
             </TouchableOpacity>
           </View>

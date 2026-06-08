@@ -34,18 +34,29 @@ import type { ScreenName, ScreenParams, NavState, NavigateFn } from '../types/na
 
 export function Navigator() {
   const [nav, setNav] = useState<NavState>({ screen: 'splash' });
+  const [guest, setGuest] = useState(false);
   const { isLoading, token } = useAuthContext();
 
   const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'accountPending', 'recuperarCuenta'];
 
   useEffect(() => {
     if (isLoading) return;
-    if (!token && !AUTH_SCREENS.includes(nav.screen)) {
+    if (!token && !guest && !AUTH_SCREENS.includes(nav.screen)) {
       setNav({ screen: 'login' });
     }
-  }, [isLoading, token, nav.screen]);
+  }, [isLoading, token, guest, nav.screen]);
+
+  // Al hacer logout volvemos a modo autenticado (no guest)
+  useEffect(() => {
+    if (!token) setGuest(false);
+  }, [token]);
 
   const navigate: NavigateFn = (screen, params) => {
+    setNav({ screen, params } as NavState);
+  };
+
+  const navigateAsGuest: NavigateFn = (screen, params) => {
+    setGuest(true);
     setNav({ screen, params } as NavState);
   };
 
@@ -55,7 +66,7 @@ export function Navigator() {
     case 'splash':
       return <SplashScreen />;
     case 'login':
-      return <LoginScreen onNavigate={navigate} />;
+      return <LoginScreen onNavigate={navigate} onNavigateAsGuest={navigateAsGuest} />;
     case 'register':
       return <RegisterScreen onNavigate={navigate} />;
     case 'verifyEmail':
