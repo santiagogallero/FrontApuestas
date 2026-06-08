@@ -5,7 +5,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
@@ -37,11 +36,13 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
   const handleLogin = async () => {
+    setError(null);
     if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      setError('Completá el email y la contraseña para continuar.');
       return;
     }
     setLoading(true);
@@ -49,8 +50,7 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
       await login(email, password);
       onNavigate('subastas');
     } catch (e: any) {
-      const msg = friendlyLoginError(e.message);
-      Alert.alert('No pudimos iniciar sesión', msg);
+      setError(friendlyLoginError(e.message));
     } finally {
       setLoading(false);
     }
@@ -91,6 +91,13 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
             <TouchableOpacity onPress={() => onNavigate('recuperarCuenta')}>
               <Text style={styles.forgot}>¿OLVIDASTE TU CONTRASEÑA?</Text>
             </TouchableOpacity>
+
+            {error && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorIcon}>⚠</Text>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
 
             <AppButton title="Iniciar Sesión" icon="→" onPress={handleLogin} loading={loading} />
 
@@ -149,4 +156,17 @@ const styles = StyleSheet.create({
   link: { color: Colors.primary, fontSize: 14, fontWeight: '700' },
   guestWrap: { alignItems: 'center', marginTop: 14 },
   guestLink: { color: Colors.primary, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.redLight,
+    borderWidth: 1,
+    borderColor: Colors.red,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    gap: 8,
+  },
+  errorIcon: { fontSize: 15, color: Colors.red, lineHeight: 20 },
+  errorText: { flex: 1, fontSize: 14, color: Colors.red, lineHeight: 20, fontWeight: '500' },
 });
