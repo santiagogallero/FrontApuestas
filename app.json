@@ -38,6 +38,8 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "apiHost": "192.168.1.11",
+      "apiPort": "8080",
       "eas": {
         "projectId": "056aad72-c4a7-4091-a817-df207fff852f"
       }

@@ -1,10 +1,28 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// IP de la PC en la red local. En Android emulador se usa la IP especial 10.0.2.2.
-// En dispositivo físico (iOS o Android real) hay que usar la IP de la PC en la red.
-const PC_IP = '192.168.1.11';
-export const API_BASE = Platform.OS === 'android' ? `http://10.0.2.2:8080` : `http://${PC_IP}:8080`;
+const DEFAULT_PC_IP = '192.168.1.11';
+const DEFAULT_PORT = '8080';
+
+function resolveHost(): string {
+  const extra = Constants.expoConfig?.extra as { apiHost?: string; apiPort?: string } | undefined;
+  const envHost = process.env.EXPO_PUBLIC_API_HOST;
+  const envPort = process.env.EXPO_PUBLIC_API_PORT;
+
+  const host = envHost || extra?.apiHost || DEFAULT_PC_IP;
+  const port = envPort || extra?.apiPort || DEFAULT_PORT;
+
+  if (Platform.OS === 'android') {
+    const androidHost = envHost || extra?.apiHost || '10.0.2.2';
+    return `http://${androidHost}:${port}`;
+  }
+  return `http://${host}:${port}`;
+}
+
+export const API_BASE = resolveHost();
+
+export const WS_BASE = API_BASE.replace(/^http/, 'ws');
 
 const TOKEN_KEY = 'auth_token';
 
@@ -20,23 +38,17 @@ export async function clearToken(): Promise<void> {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
-  const base: Record<string, string> = { 'Content-Type': 'application/json' };
-  const token = await loadToken();
-  if (token) base['Authorization'] = `Bearer ${token}`;
-  return base;
-}
-
-export async function apiPost<T>(
-  path: string,
-  body: unknown,
-  auth = false
-): Promise<T> {
+async function authHeaders(auth: boolean): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (auth) {
     const token = await loadToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
+  return headers;
+}
+
+export async function apiPost<T>(path: string, body: unknown, auth = false): Promise<T> {
+  const headers = await authHeaders(auth);
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers,
@@ -54,13 +66,36 @@ export async function apiPost<T>(
   }
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const headers = await authHeaders();
+export async function apiGet<T>(path: string, auth = true): Promise<T> {
+  const headers = await authHeaders(auth);
   const res = await fetch(`${API_BASE}${path}`, { headers });
   if (!res.ok) {
     throw new Error(await extractErrorMessage(res));
   }
   return res.json() as Promise<T>;
+}
+
+export async function apiPatch<T>(path: string, body: unknown, auth = true): Promise<T> {
+  const headers = await authHeaders(auth);
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(await extractErrorMessage(res));
+  }
+  const text = await res.text();
+  if (!text) return null as T;
+  return JSON.parse(text) as T;
+}
+
+export async function apiDelete(path: string, auth = true): Promise<void> {
+  const headers = await authHeaders(auth);
+  const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE', headers });
+  if (!res.ok) {
+    throw new Error(await extractErrorMessage(res));
+  }
 }
 
 async function extractErrorMessage(res: Response): Promise<string> {

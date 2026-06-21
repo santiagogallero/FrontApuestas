@@ -16,6 +16,7 @@ import {
   AjustesScreen,
   SegurosScreen,
   MisProductosScreen,
+  InspeccionScreen,
   DetalleAdjudicacionScreen,
   FinalizarCompraScreen,
   PagoExitosoScreen,
@@ -29,6 +30,7 @@ import {
   FaltaMetodoPagoScreen,
   AccesoPlatinoScreen,
   UsuarioHabilitadoScreen,
+  CuentasCobroScreen,
 } from '../screens';
 import type { ScreenName, ScreenParams, NavState, NavigateFn } from '../types/navigation';
 
@@ -42,6 +44,10 @@ export function Navigator() {
 
   useEffect(() => {
     if (isLoading) return;
+    if (nav.screen === 'splash') {
+      setNav({ screen: token ? 'subastas' : 'login' });
+      return;
+    }
     if (!token && !guest && !AUTH_SCREENS.includes(nav.screen)) {
       setNav({ screen: 'login' });
     }
@@ -80,7 +86,7 @@ export function Navigator() {
     case 'subastas':
       return <SubastasScreen onNavigate={navigate} isGuest={guest} />;
     case 'detalleSubasta':
-      return <DetalleSubastaScreen onNavigate={navigate} params={params as ScreenParams['detalleSubasta']} />;
+      return <DetalleSubastaScreen onNavigate={navigate} params={params as ScreenParams['detalleSubasta']} isGuest={guest} />;
     case 'billetera':
       return <BilleteraScreen onNavigate={navigate} />;
     case 'ventas':
@@ -93,14 +99,16 @@ export function Navigator() {
       return <SegurosScreen onNavigate={navigate} />;
     case 'misProductos':
       return <MisProductosScreen onNavigate={navigate} />;
+    case 'inspeccion':
+      return <InspeccionScreen onNavigate={navigate} />;
     case 'detalleAdjudicacion':
       return <DetalleAdjudicacionScreen onNavigate={navigate} />;
     case 'finalizarCompra':
-      return <FinalizarCompraScreen onNavigate={navigate} />;
+      return <FinalizarCompraScreen onNavigate={navigate} params={params as ScreenParams['finalizarCompra']} />;
     case 'pagoExitoso':
-      return <PagoExitosoScreen onNavigate={navigate} />;
+      return <PagoExitosoScreen onNavigate={navigate} params={params as ScreenParams['pagoExitoso']} />;
     case 'pagoFallido':
-      return <PagoFallidoScreen onNavigate={navigate} />;
+      return <PagoFallidoScreen onNavigate={navigate} params={params as ScreenParams['pagoFallido']} />;
     case 'chatSoporte':
       return <ChatSoporteScreen onNavigate={navigate} />;
     case 'publicarArticulo':
@@ -119,6 +127,8 @@ export function Navigator() {
       return <AccesoPlatinoScreen onNavigate={navigate} />;
     case 'usuarioHabilitado':
       return <UsuarioHabilitadoScreen onNavigate={navigate} />;
+    case 'cuentasCobro':
+      return <CuentasCobroScreen onNavigate={navigate} />;
     default:
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

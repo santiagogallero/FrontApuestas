@@ -13,6 +13,7 @@ export type ScreenName =
   | 'ajustes'
   | 'seguros'
   | 'misProductos'
+  | 'inspeccion'
   | 'detalleAdjudicacion'
   | 'finalizarCompra'
   | 'pagoExitoso'
@@ -25,7 +26,8 @@ export type ScreenName =
   | 'verificarCheque'
   | 'faltaMetodoPago'
   | 'accesoPlatino'
-  | 'usuarioHabilitado';
+  | 'usuarioHabilitado'
+  | 'cuentasCobro';
 
 export type ScreenParams = {
   splash: undefined;
@@ -42,10 +44,23 @@ export type ScreenParams = {
   ajustes: undefined;
   seguros: undefined;
   misProductos: undefined;
+  inspeccion: undefined;
   detalleAdjudicacion: undefined;
-  finalizarCompra: undefined;
-  pagoExitoso: undefined;
-  pagoFallido: undefined;
+  finalizarCompra: { registroId: number };
+  pagoExitoso: {
+    registroId: number;
+    transaccionId: string;
+    montoPagado: number;
+    moneda: string;
+    productoDescripcion: string | null;
+    medioPagoAlias: string;
+  };
+  pagoFallido: {
+    registroId: number;
+    multaPotencial: number;
+    moneda: string;
+    mensaje?: string;
+  };
   chatSoporte: undefined;
   publicarArticulo: undefined;
   agregarMetodoPago: undefined;
@@ -55,6 +70,7 @@ export type ScreenParams = {
   faltaMetodoPago: undefined;
   accesoPlatino: undefined;
   usuarioHabilitado: undefined;
+  cuentasCobro: undefined;
 };
 
 import type { Subasta } from './subasta';

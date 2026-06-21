@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
 import {
   BottomNav,
@@ -9,8 +9,11 @@ import {
   SettingsIcon,
   ChevronRightIcon,
   LogOutIcon,
+  FileIcon,
 } from '../components';
 import { useAuthContext } from '../context/AuthContext';
+import { apiGetMetrics } from '../api';
+import type { Metricas } from '../types/cuenta';
 import { Colors } from '../theme/colors';
 import type { NavigateFn, ScreenName } from '../types/navigation';
 
@@ -26,18 +29,40 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { Icon: CreditCardIcon, label: 'Métodos de pago', screen: 'billetera', badge: '3 Verificado' },
+  { Icon: CreditCardIcon, label: 'Métodos de pago', screen: 'billetera' },
   { Icon: ReceiptIcon, label: 'Historial de ofertas', screen: 'ventas' },
   { Icon: PackageIcon, label: 'Mis productos', screen: 'misProductos' },
+  { Icon: FileIcon, label: 'Cuentas de cobro', screen: 'cuentasCobro' },
   { Icon: ShieldIcon, label: 'Seguros y Seguridad', screen: 'seguros' },
   { Icon: SettingsIcon, label: 'Ajustes', screen: 'ajustes' },
 ];
 
+const INSPECTOR_ROLES = ['EMPLEADO', 'ADMIN', 'MODERADOR'];
+
+function formatMonto(n: number): string {
+  if (n >= 1000) return `$${Math.round(n / 1000)}k`;
+  return `$${n}`;
+}
+
 export function CuentaScreen({ onNavigate }: CuentaScreenProps) {
   const { currentUser, onLogout } = useAuthContext();
   const initials = currentUser?.email?.slice(0, 2).toUpperCase() ?? '??';
-  const roles = currentUser?.roles ?? [];
-  const categoria = roles.join(', ') || currentUser?.estado || 'ORO';
+  const categoria = currentUser?.categoria || currentUser?.estado || 'SIN CATEGORÍA';
+  const [metricas, setMetricas] = useState<Metricas | null>(null);
+  const esInspector = (currentUser?.roles ?? []).some((r) => INSPECTOR_ROLES.includes(r));
+  const items = esInspector
+    ? [...menuItems, { Icon: FileIcon, label: 'Inspección de artículos', screen: 'inspeccion' as ScreenName }]
+    : menuItems;
+
+  useEffect(() => {
+    let mounted = true;
+    apiGetMetrics()
+      .then((m) => mounted && setMetricas(m))
+      .catch(() => mounted && setMetricas(null));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,37 +82,25 @@ export function CuentaScreen({ onNavigate }: CuentaScreenProps) {
             <Text style={styles.categoryBadgeText}>CATEGORÍA {categoria.toUpperCase()}</Text>
           </View>
 
-          {/* Progreso de nivel */}
-          <View style={styles.levelCard}>
-            <Text style={styles.levelLabel}>PROGRESO DE NIVEL</Text>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelNext}>Siguiente: PLATINO</Text>
-              <Text style={styles.levelPct}>74%</Text>
-            </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: '74%' }]} />
-            </View>
-          </View>
-
-          {/* Stats */}
+          {/* Stats (reales) */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>42</Text>
+              <Text style={styles.statValue}>{metricas?.subastasParticipadas ?? '—'}</Text>
               <Text style={styles.statLabel}>SUBASTAS</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: Colors.green }]}>12</Text>
-              <Text style={styles.statLabel}>GANADO</Text>
+              <Text style={[styles.statValue, { color: Colors.green }]}>{metricas?.subastasGanadas ?? '—'}</Text>
+              <Text style={styles.statLabel}>GANADAS</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>$142k</Text>
+              <Text style={styles.statValue}>{metricas ? formatMonto(metricas.totalPagado) : '—'}</Text>
               <Text style={styles.statLabel}>PAGADO</Text>
             </View>
           </View>
 
           {/* Menú */}
           <View style={styles.menu}>
-            {menuItems.map((item, index) => (
+            {items.map((item, index) => (
               <TouchableOpacity key={index} style={styles.menuItem} onPress={() => onNavigate(item.screen)} activeOpacity={0.7}>
                 <View style={styles.menuIconBox}>
                   <item.Icon size={20} color={Colors.primary} />

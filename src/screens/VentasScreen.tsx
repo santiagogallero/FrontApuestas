@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, BottomNav, StatusBadge, GavelIcon } from '../components';
+import { AppHeader, BottomNav, StatusBadge, GavelIcon, AppButton } from '../components';
 import { usePagos } from '../hooks';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
@@ -91,6 +91,14 @@ export function VentasScreen({ onNavigate }: VentasScreenProps) {
                       <Text style={{ color: Colors.red, fontSize: 12, marginTop: 2, fontWeight: '700' }}>Cuenta bloqueada</Text>
                     )}
                   </View>
+                  {(item.estadoPago === 'PENDIENTE' || item.estadoPago === 'VENCIDO') && (
+                    <View style={{ marginTop: 10 }}>
+                      <AppButton
+                        title="Pagar"
+                        onPress={() => onNavigate('finalizarCompra', { registroId: item.registroSubastaId })}
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
             );

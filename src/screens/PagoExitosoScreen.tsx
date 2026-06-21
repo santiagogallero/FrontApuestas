@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-native';
-import { AppHeader, CheckIcon, DownloadIcon } from '../components';
+import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
+import { AppHeader, AppButton, CheckIcon } from '../components';
 import { Colors } from '../theme/colors';
-import type { NavigateFn } from '../types/navigation';
+import type { NavigateFn, ScreenParams } from '../types/navigation';
 
 interface PagoExitosoScreenProps {
   onNavigate: NavigateFn;
+  params: ScreenParams['pagoExitoso'];
 }
 
-export function PagoExitosoScreen({ onNavigate }: PagoExitosoScreenProps) {
+export function PagoExitosoScreen({ onNavigate, params }: PagoExitosoScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="Estado de transaccion" onBack={() => onNavigate('subastas')} />
@@ -21,33 +22,33 @@ export function PagoExitosoScreen({ onNavigate }: PagoExitosoScreenProps) {
           </View>
           <Text style={[styles.screenTitle, { textAlign: 'center' }]}>Pago exitoso</Text>
           <Text style={[styles.subtitle, { textAlign: 'center', fontSize: 12, letterSpacing: 1 }]}>
-            ID DE TRANSACCIÓN: TXN-8829-4401-RTB
+            ID DE TRANSACCIÓN: {params.transaccionId}
           </Text>
 
           <View style={[styles.badge, { backgroundColor: Colors.blueLight, marginTop: 16 }]}>
-            <Text style={[styles.badgeText, { color: Colors.primary }]}>LOTE VERIFICADO</Text>
+            <Text style={[styles.badgeText, { color: Colors.primary }]}>PAGO CONFIRMADO</Text>
           </View>
 
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=500&h=350&fit=crop' }}
-            style={[styles.detailImage, { marginTop: 20 }]}
-          />
-
-          <Text style={[styles.screenTitle, { marginTop: 20, textAlign: 'center' }]}>Centinela de Plata Cronógrafo</Text>
-          <Text style={[styles.subtitle, { textAlign: 'center' }]}>Serial #2993-A | Limited Edition{'\n'}Sentinel Series</Text>
+          <Text style={[styles.screenTitle, { marginTop: 24, textAlign: 'center', fontSize: 22 }]}>
+            {params.productoDescripcion ?? `Adjudicación #${params.registroId}`}
+          </Text>
+          <Text style={[styles.subtitle, { textAlign: 'center' }]}>
+            Medio: {params.medioPagoAlias}
+          </Text>
 
           <View style={[styles.statsRow, { width: '100%', marginTop: 24 }]}>
             <View>
-              <Text style={styles.offerLabel}>TOTAL PAID</Text>
-              <Text style={[styles.bidPrice, { fontSize: 28 }]}>$1,880.00</Text>
+              <Text style={styles.offerLabel}>TOTAL PAGADO</Text>
+              <Text style={[styles.bidPrice, { fontSize: 28 }]}>
+                ${params.montoPagado.toLocaleString()} {params.moneda}
+              </Text>
             </View>
-            <TouchableOpacity style={[styles.chip, styles.downloadChip]}>
-              <DownloadIcon size={16} color={Colors.gray} />
-              <Text style={[styles.chipText, { marginLeft: 8 }]}>Descargar Recibo</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+      <View style={{ padding: 20, paddingBottom: 32 }}>
+        <AppButton title="Volver a subastas" onPress={() => onNavigate('subastas')} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -59,14 +60,17 @@ const styles = StyleSheet.create({
   screenTitle: { fontSize: 28, fontWeight: 'bold', color: Colors.dark, marginBottom: 16 },
   subtitle: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
   iconCircle: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center' },
-  checkInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.green, justifyContent: 'center', alignItems: 'center' },
+  checkInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  detailImage: { width: '100%', height: 260, borderRadius: 20 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   offerLabel: { fontSize: 10, color: Colors.gray, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
   bidPrice: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 4 },
-  chip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, backgroundColor: Colors.gray4 },
-  downloadChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.blueLight },
-  chipText: { color: Colors.gray, fontSize: 14, fontWeight: '500' },
 });

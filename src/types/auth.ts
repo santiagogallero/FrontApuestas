@@ -11,6 +11,7 @@ export interface CurrentUser {
   estado: string;
   personaId: number | null;
   roles: string[];
+  categoria?: string | null;
 }
 
 export interface RegisterStage1Payload {

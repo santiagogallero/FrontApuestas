@@ -3,3 +3,8 @@ export * from './auth';
 export * from './subastas';
 export * from './productos';
 export * from './compliance';
+export * from './cuenta';
+export * from './catalogo';
+export * from './seguros';
+export * from './colecciones';
+export * from './payout';

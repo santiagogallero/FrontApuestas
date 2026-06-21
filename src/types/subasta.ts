@@ -6,6 +6,14 @@ export interface Subasta {
   categoria: string;
   ubicacion: string;
   capacidadAsistentes: number;
+  streamingUrl?: string | null;
+  depositoNombre?: string | null;
+  depositoDireccion?: string | null;
+}
+
+export interface StreamingInfo {
+  subastaId: number;
+  streamingUrl: string | null;
 }
 
 export interface SubastaTiming {
@@ -35,4 +43,17 @@ export interface PujaHistorial {
   nombreCliente: string;
   importe: number;
   ganador: boolean;
+}
+
+export interface BidEvent {
+  tipo: string;
+  subastaId: number;
+  itemId: number;
+  pujoId: number;
+  numeroPostor: number;
+  nombrePostor: string | null;
+  importe: number;
+  minimoPermitido: number;
+  maximoPermitido: number | null;
+  timestamp: string;
 }

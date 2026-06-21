@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from './client';
-import type { Subasta, SubastaTiming, PujaResponse, PujaHistorial } from '../types/subasta';
+import type { Subasta, SubastaTiming, PujaResponse, PujaHistorial, StreamingInfo } from '../types/subasta';
 
 export async function apiGetSubastas(): Promise<Subasta[]> {
   return apiGet<Subasta[]>('/api/subastas');
@@ -28,4 +28,8 @@ export async function apiPujar(
 
 export async function apiGetHistorialPujas(itemId: number): Promise<PujaHistorial[]> {
   return apiGet<PujaHistorial[]>(`/api/auction-runtime/pujas/historial/${itemId}`);
+}
+
+export async function apiGetStreaming(subastaId: number): Promise<StreamingInfo> {
+  return apiGet<StreamingInfo>(`/api/auction-runtime/subasta/${subastaId}/streaming`);
 }

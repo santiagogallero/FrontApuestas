@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
 import { AppHeader, BottomNav, GavelIcon, CalendarIcon, MapPinIcon } from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useSubastas } from '../hooks';
+import { apiGetColecciones } from '../api';
+import type { ColeccionResumen } from '../types/coleccion';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -24,6 +26,16 @@ const FILTERS = ['Todas', 'Común', 'Plata', 'Oro', 'Platino'];
 export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const { currentUser } = useAuthContext();
   const { filtered, loading, filter, setFilter } = useSubastas();
+  const [colecciones, setColecciones] = useState<ColeccionResumen[]>([]);
+
+  useEffect(() => {
+    apiGetColecciones()
+      .then(setColecciones)
+      .catch(() => setColecciones([]));
+  }, []);
+
+  const coleccionPorSubasta = (subastaId: number) =>
+    colecciones.find((c) => c.subastaId === subastaId);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -58,7 +70,8 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
           )}
 
           {filtered.map((item) => {
-            const isLive = item.estado === 'ACTIVA' || item.estado === 'EN_CURSO';
+            const isLive = ['ACTIVA', 'EN_CURSO', 'ABIERTA'].includes(item.estado);
+            const coleccion = coleccionPorSubasta(item.id);
             return (
               <TouchableOpacity
                 key={item.id}
@@ -82,7 +95,14 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                   </View>
                 </View>
                 <View style={styles.body}>
-                  <Text style={styles.cardTitle}>Subasta #{item.id}</Text>
+                  <Text style={styles.cardTitle}>
+                    {coleccion ? coleccion.nombre : `Subasta #${item.id}`}
+                  </Text>
+                  {coleccion && (
+                    <Text style={styles.collectionHint}>
+                      Colección · {coleccion.cantidadPiezas} piezas · {coleccion.duenioNombre ?? 'Consignador'}
+                    </Text>
+                  )}
                   <View style={styles.meta}>
                     <CalendarIcon size={14} color={Colors.gray} />
                     <Text style={styles.metaText}>{item.fecha} {item.hora}</Text>
@@ -144,6 +164,7 @@ const styles = StyleSheet.create({
   badgeCategoryText: { color: Colors.white, fontSize: 11, fontWeight: '700' },
   body: { padding: 16 },
   cardTitle: { fontSize: 18, fontWeight: '700', color: Colors.dark },
+  collectionHint: { fontSize: 13, color: Colors.primary, marginTop: 4, fontWeight: '600' },
   meta: { marginTop: 6, flexDirection: 'row', alignItems: 'center' },
   metaText: { color: Colors.gray, fontSize: 13, marginLeft: 6 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9' },

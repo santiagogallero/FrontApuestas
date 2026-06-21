@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,26 +9,55 @@ import {
   StyleSheet,
 } from 'react-native';
 import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon } from '../components';
-import { useProductos } from '../hooks';
+import { apiGetMisArticulos } from '../api';
 import { Colors } from '../theme/colors';
+import type { Articulo, EstadoInspeccion } from '../types/producto';
 import type { NavigateFn } from '../types/navigation';
 
 interface MisProductosScreenProps {
   onNavigate: NavigateFn;
 }
 
-const FILTERS = ['Todos', 'Vendidos', 'Pendientes'];
+const FILTERS = ['Todos', 'Aprobados', 'Pendientes', 'Rechazados'];
+
+const ESTADO_STYLE: Record<EstadoInspeccion, { label: string; color: string; bg: string }> = {
+  APROBADO: { label: 'APROBADO', color: Colors.green, bg: Colors.greenLight },
+  PENDIENTE: { label: 'EN INSPECCIÓN', color: Colors.orange, bg: Colors.blueLight },
+  RECHAZADO: { label: 'RECHAZADO', color: Colors.red, bg: Colors.redLight },
+};
 
 export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
   const [filter, setFilter] = useState('Todos');
-  const { productos, loading } = useProductos();
+  const [articulos, setArticulos] = useState<Articulo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = filter === 'Todos'
-    ? productos
-    : productos.filter((p) => filter === 'Vendidos' ? !p.disponible : p.disponible);
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setArticulos(await apiGetMisArticulos());
+    } catch (e: any) {
+      setError(e?.message || 'No se pudieron cargar tus artículos');
+      setArticulos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const vendidos = productos.filter((p) => !p.disponible).length;
-  const pendientes = productos.filter((p) => p.disponible).length;
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const filtered = articulos.filter((a) => {
+    if (filter === 'Aprobados') return a.estadoInspeccion === 'APROBADO';
+    if (filter === 'Pendientes') return a.estadoInspeccion === 'PENDIENTE';
+    if (filter === 'Rechazados') return a.estadoInspeccion === 'RECHAZADO';
+    return true;
+  });
+
+  const aprobados = articulos.filter((a) => a.estadoInspeccion === 'APROBADO').length;
+  const pendientes = articulos.filter((a) => a.estadoInspeccion === 'PENDIENTE').length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -46,15 +75,15 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>MIS PRODUCTOS</Text>
-              <Text style={styles.statValue}>{productos.length}</Text>
+              <Text style={styles.statValue}>{articulos.length}</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>VENDIDOS</Text>
-              <Text style={[styles.statValue, { color: Colors.green }]}>{vendidos}</Text>
+              <Text style={styles.statLabel}>APROBADOS</Text>
+              <Text style={[styles.statValue, { color: Colors.green }]}>{aprobados}</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>PENDIENTES</Text>
-              <Text style={styles.statValue}>{pendientes}</Text>
+              <Text style={styles.statLabel}>EN INSPECCIÓN</Text>
+              <Text style={[styles.statValue, { color: Colors.orange }]}>{pendientes}</Text>
             </View>
           </View>
 
@@ -72,14 +101,18 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
 
           {loading && <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />}
 
-          {!loading && filtered.length === 0 && (
-            <Text style={[styles.empty, { textAlign: 'center', marginTop: 32 }]}>No hay productos.</Text>
+          {!loading && error && (
+            <Text style={[styles.empty, { textAlign: 'center', marginTop: 32, color: Colors.red }]}>{error}</Text>
+          )}
+
+          {!loading && !error && filtered.length === 0 && (
+            <Text style={[styles.empty, { textAlign: 'center', marginTop: 32 }]}>
+              No tenés artículos {filter !== 'Todos' ? `en estado "${filter}"` : 'publicados'}.
+            </Text>
           )}
 
           {filtered.map((item) => {
-            const statusColor = item.disponible ? Colors.primary : Colors.green;
-            const statusBg = item.disponible ? Colors.blueLight : Colors.greenLight;
-            const statusLabel = item.disponible ? 'DISPONIBLE' : 'VENDIDO';
+            const estado = ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
             return (
               <View key={item.id} style={styles.offerCard}>
                 <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
@@ -87,18 +120,29 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
                 </View>
                 <View style={styles.offerBody}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Text style={styles.offerTitle}>{item.descripcionCatalogo || `Producto #${item.id}`}</Text>
-                    <StatusBadge text={statusLabel} color={statusColor} bg={statusBg} />
+                    <Text style={styles.offerTitle}>{item.titulo || item.descripcionCatalogo || `Producto #${item.id}`}</Text>
+                    <StatusBadge text={estado.label} color={estado.color} bg={estado.bg} />
                   </View>
                   <View style={{ marginTop: 8 }}>
-                    <Text style={{ color: Colors.gray, fontSize: 12 }}>Fecha: {item.fecha}</Text>
+                    {item.categoria ? (
+                      <Text style={{ color: Colors.primary, fontSize: 12, fontWeight: '700' }}>{item.categoria}</Text>
+                    ) : null}
                     {item.descripcionCompleta ? (
                       <Text style={{ color: Colors.gray2, fontSize: 12, marginTop: 2 }} numberOfLines={2}>{item.descripcionCompleta}</Text>
                     ) : null}
+                    {item.cantidadFotos > 0 ? (
+                      <Text style={{ color: Colors.gray, fontSize: 11, marginTop: 4 }}>{item.cantidadFotos} foto(s)</Text>
+                    ) : null}
                   </View>
-                  <TouchableOpacity onPress={() => onNavigate('detalleAdjudicacion')}>
-                    <Text style={styles.verDetalle}>Ver detalle</Text>
-                  </TouchableOpacity>
+                  {item.estadoInspeccion === 'RECHAZADO' && item.motivoRechazo ? (
+                    <View style={styles.rechazoBox}>
+                      <Text style={styles.rechazoLabel}>Motivo del rechazo</Text>
+                      <Text style={styles.rechazoText}>{item.motivoRechazo}</Text>
+                    </View>
+                  ) : null}
+                  {item.estadoInspeccion === 'PENDIENTE' ? (
+                    <Text style={styles.pendienteHint}>Esperando inspección de un especialista.</Text>
+                  ) : null}
                 </View>
               </View>
             );
@@ -127,6 +171,9 @@ const styles = StyleSheet.create({
   offerImage: { width: 80, height: 80, borderRadius: 14 },
   offerBody: { flex: 1, marginLeft: 14 },
   offerTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark, flex: 1, marginRight: 8 },
-  verDetalle: { color: Colors.red, fontSize: 13, fontWeight: '700', marginTop: 8, textDecorationLine: 'underline' },
+  rechazoBox: { backgroundColor: Colors.redLight, borderRadius: 10, padding: 8, marginTop: 8 },
+  rechazoLabel: { fontSize: 10, fontWeight: '800', color: Colors.red, letterSpacing: 0.5 },
+  rechazoText: { fontSize: 12, color: Colors.dark, marginTop: 2 },
+  pendienteHint: { fontSize: 12, color: Colors.orange, marginTop: 8, fontWeight: '600' },
   addBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center' },
 });

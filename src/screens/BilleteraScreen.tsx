@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, SafeAreaView, ActivityIndicator, StyleSheet } from 'react-native';
 import { AppHeader, AppButton, BottomNav, CreditCardIcon, BankIcon, CheckCircleIcon } from '../components';
+import { apiGetPaymentMethods } from '../api';
+import type { MedioPago } from '../types/cuenta';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -8,7 +10,33 @@ interface BilleteraScreenProps {
   onNavigate: NavigateFn;
 }
 
+function isBancario(tipo: string): boolean {
+  const t = tipo.toUpperCase();
+  return t.includes('BANCO') || t.includes('CUENTA') || t.includes('CHEQUE');
+}
+
 export function BilleteraScreen({ onNavigate }: BilleteraScreenProps) {
+  const [medios, setMedios] = useState<MedioPago[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await apiGetPaymentMethods();
+        if (mounted) setMedios(data);
+      } catch (e: any) {
+        if (mounted) setError(e?.message || 'No se pudieron cargar los métodos de pago');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="Mi billetera" onBack={() => onNavigate('cuenta')} />
@@ -16,42 +44,59 @@ export function BilleteraScreen({ onNavigate }: BilleteraScreenProps) {
         <View style={styles.content}>
           <Text style={[styles.sectionTitle, { marginBottom: 16 }]}>Métodos de pago registrados</Text>
 
-          {/* Nota: el backend no expone GET /api/auth/payment-methods; esto es mock hasta que se implemente */}
-          <View style={[styles.paymentCard, { backgroundColor: Colors.primary }]}>
-            <View style={styles.paymentIconBox}>
-              <CreditCardIcon size={20} color={Colors.white} />
-            </View>
-            <View style={styles.paymentInfo}>
-              <Text style={[styles.paymentTitle, { color: Colors.white }]}>Tarjeta Visa que termina en 4242</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <CheckCircleIcon size={13} color="#BFDBFE" />
-                <Text style={[styles.paymentSub, { color: '#BFDBFE', marginLeft: 5 }]}>VERIFICADA</Text>
-              </View>
-            </View>
-          </View>
+          {loading && <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />}
 
-          <View style={[styles.paymentCard, { backgroundColor: Colors.gray4, marginTop: 12 }]}>
-            <View style={[styles.paymentIconBox, { backgroundColor: Colors.white }]}>
-              <BankIcon size={20} color={Colors.primary} />
-            </View>
-            <View style={styles.paymentInfo}>
-              <Text style={[styles.paymentTitle, { color: Colors.dark }]}>Cuenta bancaria de Chase que termina en 7856</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <CheckCircleIcon size={13} color={Colors.green} />
-                <Text style={[styles.paymentSub, { color: Colors.gray, marginLeft: 5 }]}>VERIFICADA</Text>
-              </View>
-            </View>
-          </View>
+          {!loading && error && <Text style={styles.empty}>{error}</Text>}
 
-          <View style={[styles.balanceCard, { marginTop: 32 }]}>
-            <Text style={[styles.sectionTitle, { marginBottom: 8 }]}>Saldo disponible</Text>
-            <Text style={{ color: Colors.gray, fontSize: 14, lineHeight: 20, marginBottom: 16 }}>
-              Fondos listos para tus próximas ofertas y compras en la plataforma.
-            </Text>
-            <Text style={styles.balanceAmount}>$12,480.00</Text>
-          </View>
+          {!loading && !error && medios.length === 0 && (
+            <Text style={styles.empty}>Todavía no registraste métodos de pago.</Text>
+          )}
 
-          <AppButton title="+ Agregar método de pago" onPress={() => onNavigate('agregarMetodoPago')} />
+          {!loading &&
+            !error &&
+            medios.map((m, index) => {
+              const banco = isBancario(m.tipo);
+              return (
+                <View
+                  key={m.id}
+                  style={[
+                    styles.paymentCard,
+                    { backgroundColor: index === 0 ? Colors.primary : Colors.gray4, marginTop: index === 0 ? 0 : 12 },
+                  ]}
+                >
+                  <View style={[styles.paymentIconBox, index !== 0 && { backgroundColor: Colors.white }]}>
+                    {banco ? (
+                      <BankIcon size={20} color={index === 0 ? Colors.white : Colors.primary} />
+                    ) : (
+                      <CreditCardIcon size={20} color={index === 0 ? Colors.white : Colors.primary} />
+                    )}
+                  </View>
+                  <View style={styles.paymentInfo}>
+                    <Text style={[styles.paymentTitle, { color: index === 0 ? Colors.white : Colors.dark }]}>
+                      {m.aliasDescripcion}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <CheckCircleIcon
+                        size={13}
+                        color={m.verificado ? (index === 0 ? '#BFDBFE' : Colors.green) : Colors.gray2}
+                      />
+                      <Text
+                        style={[
+                          styles.paymentSub,
+                          { color: index === 0 ? '#BFDBFE' : Colors.gray, marginLeft: 5 },
+                        ]}
+                      >
+                        {m.moneda} · {m.verificado ? 'VERIFICADO' : 'PENDIENTE DE VERIFICACIÓN'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+
+          <View style={{ marginTop: 24 }}>
+            <AppButton title="+ Agregar método de pago" onPress={() => onNavigate('agregarMetodoPago')} />
+          </View>
         </View>
       </ScrollView>
       <BottomNav active="billetera" onNavigate={onNavigate} />
@@ -69,6 +114,5 @@ const styles = StyleSheet.create({
   paymentInfo: { flex: 1, marginLeft: 14 },
   paymentTitle: { fontSize: 15, fontWeight: '600' },
   paymentSub: { fontSize: 12, fontWeight: '600', letterSpacing: 0.5 },
-  balanceCard: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  balanceAmount: { fontSize: 32, fontWeight: 'bold', color: Colors.primary },
+  empty: { fontSize: 14, color: Colors.gray, lineHeight: 22, marginTop: 8 },
 });
