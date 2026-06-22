@@ -4,6 +4,7 @@ import type {
   CurrentUser,
   RegisterStage1Payload,
   RegisterStage2Payload,
+  RegistrationStatus,
 } from '../types/auth';
 
 export async function apiLogin(email: string, password: string): Promise<LoginResponse> {
@@ -26,6 +27,10 @@ export async function apiSendEmailCode(email: string): Promise<string> {
 
 export async function apiVerifyEmailCode(email: string, code: string): Promise<string> {
   return apiPost<string>('/api/auth/email/verify-code', { email, code }, false);
+}
+
+export async function apiGetRegistrationStatus(email: string): Promise<RegistrationStatus> {
+  return apiGet<RegistrationStatus>(`/api/auth/register/status?email=${encodeURIComponent(email)}`, false);
 }
 
 export async function apiGetMe(): Promise<CurrentUser> {

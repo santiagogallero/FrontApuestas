@@ -4,6 +4,9 @@ const crypto = require('crypto');
 
 const PORT = 8080;
 
+/** email -> { etapa, requiereVerificacionEmail, puedeCompletarDocumentacion } */
+const REGISTER_PROGRESS = new Map();
+
 // ─── Datos de prueba ───
 const USERS = {
   // ── Usuarios que funcionan ──
@@ -334,7 +337,30 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/auth/register/stage1' && method === 'POST') {
     const body = await readBody(req);
     console.log('Stage1 registro:', body.email);
-    sendJson(res, 200, 'Registro etapa 1 completado');
+    const email = String(body.email || '').toLowerCase();
+    REGISTER_PROGRESS.set(email, {
+      etapa: 'ETAPA_1_COMPLETA',
+      requiereVerificacionEmail: true,
+      puedeCompletarDocumentacion: false,
+    });
+    sendJson(res, 200, 'Registro iniciado. Revisa tu correo e ingresa el codigo de verificacion para continuar.');
+    return;
+  }
+
+  if (pathname === '/api/auth/register/status' && method === 'GET') {
+    const email = String(parsed.query.email || '').toLowerCase();
+    const progress = REGISTER_PROGRESS.get(email);
+    if (!progress) {
+      sendJson(res, 404, { message: 'Usuario no encontrado' });
+      return;
+    }
+    sendJson(res, 200, {
+      email,
+      usuarioEstado: progress.requiereVerificacionEmail ? 'PENDIENTE_VERIFICACION_EMAIL' : 'PENDIENTE',
+      etapa: progress.etapa,
+      requiereVerificacionEmail: progress.requiereVerificacionEmail,
+      puedeCompletarDocumentacion: progress.puedeCompletarDocumentacion,
+    });
     return;
   }
 
@@ -349,12 +375,24 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 400, { message: 'Codigo invalido' });
       return;
     }
+    const email = String(body.email || '').toLowerCase();
+    REGISTER_PROGRESS.set(email, {
+      etapa: 'EMAIL_VERIFICADO',
+      requiereVerificacionEmail: false,
+      puedeCompletarDocumentacion: true,
+    });
     sendJson(res, 200, 'Correo verificado. Continua con la documentacion.');
     return;
   }
 
   if (pathname === '/api/auth/register/stage2' && method === 'POST') {
     const body = await readBody(req);
+    const email = String(body.email || '').toLowerCase();
+    const progress = REGISTER_PROGRESS.get(email);
+    if (!progress || !progress.puedeCompletarDocumentacion) {
+      sendJson(res, 400, { message: 'Debes verificar tu correo antes de continuar con la documentacion' });
+      return;
+    }
     console.log('Stage2 registro:', body.email);
     sendJson(res, 200, 'Registro etapa 2 completado');
     return;

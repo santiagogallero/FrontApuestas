@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AppButton, AppInput, Logo, CameraIcon, FileIcon, ShieldIcon } from '../components';
-import { apiRegisterStage2 } from '../api';
+import { apiRegisterStage2, apiGetRegistrationStatus } from '../api';
 import { Colors } from '../theme/colors';
 import type { NavigateFn, ScreenParams } from '../types/navigation';
 
@@ -83,6 +83,37 @@ export function RegisterStage2Screen({ onNavigate, params }: RegisterStage2Scree
   const [docFrenteUri, setDocFrenteUri] = useState('');
   const [docDorsoUri, setDocDorsoUri] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
+  useEffect(() => {
+    if (!email) {
+      setCheckingStatus(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const status = await apiGetRegistrationStatus(email);
+        if (cancelled) return;
+        if (status.requiereVerificacionEmail || !status.puedeCompletarDocumentacion) {
+          Alert.alert(
+            'Verificación requerida',
+            'Primero debes confirmar el código que te enviamos por correo.',
+            [{ text: 'OK', onPress: () => onNavigate('verifyEmail', { email }) }]
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          Alert.alert('Error', 'No se pudo validar el estado del registro.');
+        }
+      } finally {
+        if (!cancelled) setCheckingStatus(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [email, onNavigate]);
 
   const handleSubmit = async () => {
     if (!numeroTramite || !docFrenteUri || !docDorsoUri) {
@@ -107,6 +138,11 @@ export function RegisterStage2Screen({ onNavigate, params }: RegisterStage2Scree
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+      {checkingStatus ? (
+        <View style={styles.loadingWrap}>
+          <Text style={styles.loadingText}>Validando registro...</Text>
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.top}>
           <Logo size={28} />
@@ -156,6 +192,7 @@ export function RegisterStage2Screen({ onNavigate, params }: RegisterStage2Scree
           </View>
         </View>
       </ScrollView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -196,6 +233,8 @@ function UploadCard({ icon, title, hint, imageUri, onPress }: UploadCardProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
+  loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { fontSize: 15, color: Colors.gray },
   scroll: { flexGrow: 1, justifyContent: 'center' },
   top: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 8 },
   brand: { fontSize: 18, fontWeight: '700', color: Colors.dark, marginLeft: 10 },

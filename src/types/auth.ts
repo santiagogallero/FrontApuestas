@@ -29,3 +29,11 @@ export interface RegisterStage2Payload {
   docFrenteUrl: string;
   docDorsoUrl: string;
 }
+
+export interface RegistrationStatus {
+  email: string;
+  usuarioEstado: string;
+  etapa: string;
+  requiereVerificacionEmail: boolean;
+  puedeCompletarDocumentacion: boolean;
+}
