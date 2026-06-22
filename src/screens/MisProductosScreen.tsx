@@ -114,7 +114,7 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
           {filtered.map((item) => {
             const estado = ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
             return (
-              <View key={item.id} style={styles.offerCard}>
+              <TouchableOpacity key={item.id} style={styles.offerCard} onPress={() => onNavigate('chatSoporte', { productoId: item.id })} activeOpacity={0.8}>
                 <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
                   <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
                 </View>
@@ -144,7 +144,7 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
                     <Text style={styles.pendienteHint}>Esperando inspección de un especialista.</Text>
                   ) : null}
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

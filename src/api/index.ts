@@ -8,3 +8,4 @@ export * from './catalogo';
 export * from './seguros';
 export * from './colecciones';
 export * from './payout';
+export * from './chat';

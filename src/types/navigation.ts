@@ -63,7 +63,7 @@ export type ScreenParams = {
     moneda: string;
     mensaje?: string;
   };
-  chatSoporte: undefined;
+  chatSoporte: { productoId: number };
   publicarArticulo: undefined;
   agregarMetodoPago: undefined;
   agregarTarjeta: undefined;

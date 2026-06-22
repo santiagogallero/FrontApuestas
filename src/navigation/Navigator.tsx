@@ -113,7 +113,7 @@ export function Navigator() {
     case 'pagoFallido':
       return <PagoFallidoScreen onNavigate={navigate} params={params as ScreenParams['pagoFallido']} />;
     case 'chatSoporte':
-      return <ChatSoporteScreen onNavigate={navigate} />;
+      return <ChatSoporteScreen onNavigate={navigate} params={params as ScreenParams['chatSoporte']} />;
     case 'publicarArticulo':
       return <PublicarArticuloScreen onNavigate={navigate} />;
     case 'agregarMetodoPago':
