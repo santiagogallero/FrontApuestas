@@ -2,6 +2,7 @@ export * from './SplashScreen';
 export * from './LoginScreen';
 export * from './RegisterScreen';
 export * from './VerifyEmailScreen';
+export * from './RegisterStage2Screen';
 export * from './AccountPendingScreen';
 export * from './RecuperarCuentaScreen';
 export * from './SubastasScreen';

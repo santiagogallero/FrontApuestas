@@ -6,6 +6,7 @@ import {
   LoginScreen,
   RegisterScreen,
   VerifyEmailScreen,
+  RegisterStage2Screen,
   AccountPendingScreen,
   RecuperarCuentaScreen,
   SubastasScreen,
@@ -39,7 +40,7 @@ export function Navigator() {
   const [guest, setGuest] = useState(false);
   const { isLoading, token } = useAuthContext();
 
-  const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'accountPending', 'recuperarCuenta'];
+  const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'registerStage2', 'accountPending', 'recuperarCuenta'];
   const GUEST_SCREENS: ScreenName[] = ['subastas', 'detalleSubasta', ...AUTH_SCREENS];
 
   useEffect(() => {
@@ -79,6 +80,8 @@ export function Navigator() {
       return <RegisterScreen onNavigate={navigate} />;
     case 'verifyEmail':
       return <VerifyEmailScreen onNavigate={navigate} params={params as ScreenParams['verifyEmail']} />;
+    case 'registerStage2':
+      return <RegisterStage2Screen onNavigate={navigate} params={params as ScreenParams['registerStage2']} />;
     case 'accountPending':
       return <AccountPendingScreen onNavigate={navigate} />;
     case 'recuperarCuenta':

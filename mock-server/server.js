@@ -338,6 +338,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === '/api/auth/email/send-code' && method === 'POST') {
+    sendJson(res, 200, 'Codigo enviado');
+    return;
+  }
+
+  if (pathname === '/api/auth/email/verify-code' && method === 'POST') {
+    const body = await readBody(req);
+    if (body.code === '000000') {
+      sendJson(res, 400, { message: 'Codigo invalido' });
+      return;
+    }
+    sendJson(res, 200, 'Correo verificado. Continua con la documentacion.');
+    return;
+  }
+
   if (pathname === '/api/auth/register/stage2' && method === 'POST') {
     const body = await readBody(req);
     console.log('Stage2 registro:', body.email);

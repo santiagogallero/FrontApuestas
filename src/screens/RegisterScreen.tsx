@@ -94,7 +94,7 @@ export function RegisterScreen({ onNavigate }: RegisterScreenProps) {
             <AppSelect label="PAÍS DE ORIGEN" value={paisOrigen} options={PAISES} onChange={setPaisOrigen} />
           </View>
 
-          <AppButton title="Enviar documentacion" icon="→" onPress={handleRegister} loading={loading} />
+          <AppButton title="Continuar" icon="→" onPress={handleRegister} loading={loading} />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>

@@ -3,6 +3,7 @@ export type ScreenName =
   | 'login'
   | 'register'
   | 'verifyEmail'
+  | 'registerStage2'
   | 'accountPending'
   | 'recuperarCuenta'
   | 'subastas'
@@ -34,6 +35,7 @@ export type ScreenParams = {
   login: undefined;
   register: undefined;
   verifyEmail: { email: string };
+  registerStage2: { email: string };
   accountPending: undefined;
   recuperarCuenta: undefined;
   subastas: undefined;
