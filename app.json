@@ -16,7 +16,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Necesitamos acceso a la cámara para fotografiar tu documento de identidad.",
-        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tus fotos para seleccionar la imagen de tu documento."
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tus fotos para seleccionar la imagen de tu documento.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "android": {
@@ -38,7 +41,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiHost": "192.168.1.11",
+      "apiHost": "72.60.245.66",
       "apiPort": "8080",
       "eas": {
         "projectId": "056aad72-c4a7-4091-a817-df207fff852f"
