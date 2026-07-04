@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { GavelIcon, TrendingIcon, WalletIcon, UserIcon } from './icons';
+import { GavelIcon, TrendingIcon, WalletIcon, UserIcon, ChatIcon } from './icons';
 import { Colors } from '../theme/colors';
 import type { ScreenName } from '../types/navigation';
+import { useAuthContext } from '../context/AuthContext';
 
 interface BottomNavProps {
   active: ScreenName;
@@ -12,14 +13,25 @@ interface BottomNavProps {
 
 type IconCmp = (p: { size?: number; color?: string }) => React.ReactElement;
 
-const tabs: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth: boolean }[] = [
-  { key: 'subastas', label: 'Subastas', Icon: GavelIcon, requiresAuth: false },
-  { key: 'ventas', label: 'Ventas', Icon: TrendingIcon, requiresAuth: true },
-  { key: 'billetera', label: 'Billetera', Icon: WalletIcon, requiresAuth: true },
-  { key: 'cuenta', label: 'Cuenta', Icon: UserIcon, requiresAuth: true },
+const POSTOR_TABS: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth: boolean }[] = [
+  { key: 'subastas',   label: 'Subastas',  Icon: GavelIcon,    requiresAuth: false },
+  { key: 'ventas',     label: 'Ventas',    Icon: TrendingIcon, requiresAuth: true },
+  { key: 'billetera',  label: 'Billetera', Icon: WalletIcon,   requiresAuth: true },
+  { key: 'cuenta',     label: 'Cuenta',    Icon: UserIcon,     requiresAuth: true },
+];
+
+const ADMIN_TABS: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth: boolean }[] = [
+  { key: 'subastas',   label: 'Subastas',  Icon: GavelIcon,    requiresAuth: true },
+  { key: 'adminChats', label: 'Chats',     Icon: ChatIcon,     requiresAuth: true },
+  { key: 'ventas',     label: 'Ventas',    Icon: TrendingIcon, requiresAuth: true },
+  { key: 'cuenta',     label: 'Cuenta',    Icon: UserIcon,     requiresAuth: true },
 ];
 
 export function BottomNav({ active, onNavigate, isGuest }: BottomNavProps) {
+  const { currentUser } = useAuthContext();
+  const isAdmin = currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('EMPLEADO');
+  const tabs = isAdmin ? ADMIN_TABS : POSTOR_TABS;
+
   return (
     <View style={styles.nav}>
       {tabs.map((t) => {
@@ -43,44 +55,12 @@ export function BottomNav({ active, onNavigate, isGuest }: BottomNavProps) {
 }
 
 const styles = StyleSheet.create({
-  nav: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-  },
-  item: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  iconBox: {
-    width: 48,
-    height: 36,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconBoxActive: {
-    backgroundColor: Colors.blueLight,
-  },
-  label: {
-    fontSize: 11,
-    color: Colors.gray2,
-    marginTop: 3,
-  },
-  labelActive: {
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  labelLocked: {
-    color: Colors.gray3,
-  },
-  lock: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    fontSize: 10,
-  },
+  nav:          { flexDirection: 'row', backgroundColor: Colors.white, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingBottom: Platform.OS === 'ios' ? 24 : 12 },
+  item:         { flex: 1, alignItems: 'center' },
+  iconBox:      { width: 48, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  iconBoxActive: { backgroundColor: Colors.blueLight },
+  label:        { fontSize: 11, color: Colors.gray2, marginTop: 3 },
+  labelActive:  { color: Colors.primary, fontWeight: '700' },
+  labelLocked:  { color: Colors.gray3 },
+  lock:         { position: 'absolute', bottom: -2, right: -2, fontSize: 10 },
 });

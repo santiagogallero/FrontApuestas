@@ -7,15 +7,17 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon } from '../components';
-import { apiGetMisArticulos } from '../api';
+import { apiGetMisArticulos, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo, EstadoInspeccion } from '../types/producto';
-import type { NavigateFn } from '../types/navigation';
+import type { NavigateFn, ScreenParams } from '../types/navigation';
 
 interface MisProductosScreenProps {
   onNavigate: NavigateFn;
+  params?: ScreenParams['misProductos'];
 }
 
 const FILTERS = ['Todos', 'Aprobados', 'Pendientes', 'Rechazados'];
@@ -26,7 +28,7 @@ const ESTADO_STYLE: Record<EstadoInspeccion, { label: string; color: string; bg:
   RECHAZADO: { label: 'RECHAZADO', color: Colors.red, bg: Colors.redLight },
 };
 
-export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
+export function MisProductosScreen({ onNavigate, params }: MisProductosScreenProps) {
   const [filter, setFilter] = useState('Todos');
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,13 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
     <SafeAreaView style={styles.container}>
       <AppHeader
         title="Mis productos"
-        onBack={() => onNavigate('cuenta')}
+        onBack={() => {
+            if (params?.backTo === 'chatSoporte' && params.chatParams) {
+              onNavigate('chatSoporte', params.chatParams);
+            } else {
+              onNavigate('cuenta');
+            }
+          }}
         right={
           <TouchableOpacity style={styles.addBtn} onPress={() => onNavigate('publicarArticulo')}>
             <PlusIcon size={20} color={Colors.white} />
@@ -113,8 +121,9 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
 
           {filtered.map((item) => {
             const estado = ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
+            const esRechazado = item.estadoInspeccion === 'RECHAZADO';
             return (
-              <TouchableOpacity key={item.id} style={styles.offerCard} onPress={() => onNavigate('chatSoporte', { productoId: item.id })} activeOpacity={0.8}>
+              <View key={item.id} style={styles.offerCard}>
                 <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
                   <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
                 </View>
@@ -134,7 +143,7 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
                       <Text style={{ color: Colors.gray, fontSize: 11, marginTop: 4 }}>{item.cantidadFotos} foto(s)</Text>
                     ) : null}
                   </View>
-                  {item.estadoInspeccion === 'RECHAZADO' && item.motivoRechazo ? (
+                  {esRechazado && item.motivoRechazo ? (
                     <View style={styles.rechazoBox}>
                       <Text style={styles.rechazoLabel}>Motivo del rechazo</Text>
                       <Text style={styles.rechazoText}>{item.motivoRechazo}</Text>
@@ -143,8 +152,24 @@ export function MisProductosScreen({ onNavigate }: MisProductosScreenProps) {
                   {item.estadoInspeccion === 'PENDIENTE' ? (
                     <Text style={styles.pendienteHint}>Esperando inspección de un especialista.</Text>
                   ) : null}
+                  {(esRechazado || item.estadoInspeccion === 'PENDIENTE') ? (
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      activeOpacity={0.8}
+                      onPress={async () => {
+                        try {
+                          const conv = await apiCrearConversacion(item.id);
+                          onNavigate('chatSoporte', { conversacionId: conv.conversacionId, titulo: item.titulo ?? 'Soporte' });
+                        } catch (e: any) {
+                          Alert.alert('Error', e?.message ?? 'No se pudo abrir el chat');
+                        }
+                      }}
+                    >
+                      <Text style={styles.chatBtnText}>Consultar con soporte</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
-              </TouchableOpacity>
+              </View>
             );
           })}
         </View>
@@ -175,5 +200,7 @@ const styles = StyleSheet.create({
   rechazoLabel: { fontSize: 10, fontWeight: '800', color: Colors.red, letterSpacing: 0.5 },
   rechazoText: { fontSize: 12, color: Colors.dark, marginTop: 2 },
   pendienteHint: { fontSize: 12, color: Colors.orange, marginTop: 8, fontWeight: '600' },
+  chatBtn: { marginTop: 10, backgroundColor: Colors.primary, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14, alignSelf: 'flex-start' },
+  chatBtnText: { color: Colors.white, fontSize: 13, fontWeight: '700' },
   addBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center' },
 });

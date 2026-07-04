@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, SafeAreaView, Alert, StyleSheet } from 'react-native';
-import { AppHeader, AppButton, Toggle, BellIcon, GlobeIcon, LockIcon, DollarIcon, MoonIcon } from '../components';
+import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
+import { AppHeader, Toggle, BellIcon, GlobeIcon, LockIcon, DollarIcon, MoonIcon } from '../components';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -46,7 +46,6 @@ export function AjustesScreen({ onNavigate }: AjustesScreenProps) {
             </View>
           ))}
 
-          <AppButton title="Guardar cambios" onPress={() => Alert.alert('Guardado', 'Tus preferencias se han actualizado')} variant="secondary" />
         </View>
       </ScrollView>
     </SafeAreaView>

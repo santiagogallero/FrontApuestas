@@ -8,6 +8,7 @@ export interface CatalogoItem {
   moneda: string;
   tieneSeguro: boolean;
   duenioNombre: string | null;
+  fotoUrl: string | null;
 }
 
 export interface CatalogoSubasta {

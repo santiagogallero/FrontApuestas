@@ -24,6 +24,10 @@ export async function apiGetArticulosPendientes(): Promise<Articulo[]> {
   return apiGet<Articulo[]>('/api/articulos/pendientes');
 }
 
+export async function apiGetTodosArticulos(): Promise<Articulo[]> {
+  return apiGet<Articulo[]>('/api/articulos/todos');
+}
+
 export async function apiInspeccionarArticulo(
   id: number,
   payload: InspeccionRequest

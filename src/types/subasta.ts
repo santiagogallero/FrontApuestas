@@ -23,6 +23,9 @@ export interface SubastaTiming {
   fin: string;
   estadoTemporal: string;
   minutosRestantes: number;
+  itemActualId: number | null;
+  itemExpiraAt: string | null;
+  segundosRestantesItem: number | null;
 }
 
 export interface PujaResponse {

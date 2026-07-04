@@ -382,3 +382,12 @@ export function EyeIcon({ size = 20, color = Colors.gray2, strokeWidth = 2 }: Ic
     </Svg>
   );
 }
+
+/** Chat / mensajes */
+export function ChatIcon({ size = 24, color = Colors.gray, strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}

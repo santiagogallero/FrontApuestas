@@ -12,6 +12,8 @@ export interface CurrentUser {
   personaId: number | null;
   roles: string[];
   categoria?: string | null;
+  tieneMetodoPagoVerificado?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface RegisterStage1Payload {

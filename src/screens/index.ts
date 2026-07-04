@@ -28,3 +28,5 @@ export * from './FaltaMetodoPagoScreen';
 export * from './AccesoPlatinoScreen';
 export * from './UsuarioHabilitadoScreen';
 export * from './CuentasCobroScreen';
+export * from './AdminChatsScreen';
+export * from './CrearSubastaScreen';

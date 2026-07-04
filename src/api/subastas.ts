@@ -33,3 +33,28 @@ export async function apiGetHistorialPujas(itemId: number): Promise<PujaHistoria
 export async function apiGetStreaming(subastaId: number): Promise<StreamingInfo> {
   return apiGet<StreamingInfo>(`/api/auction-runtime/subasta/${subastaId}/streaming`);
 }
+
+export async function apiIniciarSubasta(subastaId: number, duracionItemMinutos?: number): Promise<string> {
+  return apiPost<string>(`/api/auction-runtime/subasta/${subastaId}/iniciar`, duracionItemMinutos ? { duracionItemMinutos } : {}, true);
+}
+
+export async function apiCerrarSubasta(subastaId: number): Promise<unknown> {
+  return apiPost<unknown>(`/api/auction-runtime/subasta/${subastaId}/cerrar`, {}, true);
+}
+
+export interface CrearSubastaResponse {
+  subastaId: number;
+  ubicacion: string;
+  categoria: string;
+  estado: string;
+  duracionItemMinutos: number;
+  productos: string[];
+}
+
+export async function apiCrearSubasta(payload: {
+  ubicacion: string;
+  categoria: string;
+  items: { productoId: number; precioBase: number }[];
+}): Promise<CrearSubastaResponse> {
+  return apiPost<CrearSubastaResponse>('/api/auction-runtime/subasta/crear', payload, true);
+}

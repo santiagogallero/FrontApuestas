@@ -11,30 +11,42 @@ import {
   StyleSheet,
 } from 'react-native';
 import { AppHeader, FileIcon, CheckCircleIcon, AlertCircleIcon } from '../components';
-import { apiGetArticulosPendientes, apiInspeccionarArticulo } from '../api';
+import { apiGetTodosArticulos, apiInspeccionarArticulo, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo } from '../types/producto';
 import type { NavigateFn } from '../types/navigation';
 
+import type { ScreenParams } from '../types/navigation';
+
 interface Props {
   onNavigate: NavigateFn;
+  params?: ScreenParams['inspeccion'];
 }
 
-export function InspeccionScreen({ onNavigate }: Props) {
+const FILTROS = ['Todos', 'PENDIENTE', 'APROBADO', 'RECHAZADO'];
+
+const ESTADO_COLORS: Record<string, { color: string; bg: string }> = {
+  PENDIENTE:  { color: Colors.orange, bg: Colors.orangeLight },
+  APROBADO:   { color: Colors.green,  bg: Colors.greenLight },
+  RECHAZADO:  { color: Colors.red,    bg: Colors.redLight },
+};
+
+export function InspeccionScreen({ onNavigate, params }: Props) {
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rechazandoId, setRechazandoId] = useState<number | null>(null);
   const [motivo, setMotivo] = useState('');
   const [procesando, setProcesando] = useState<number | null>(null);
+  const [filtro, setFiltro] = useState('Todos');
 
   const cargar = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setArticulos(await apiGetArticulosPendientes());
+      setArticulos(await apiGetTodosArticulos());
     } catch (e: any) {
-      setError(e?.message || 'No se pudo cargar la cola de inspección');
+      setError(e?.message || 'No se pudo cargar los artículos');
       setArticulos([]);
     } finally {
       setLoading(false);
@@ -77,15 +89,36 @@ export function InspeccionScreen({ onNavigate }: Props) {
     }
   };
 
+  const filtrados = filtro === 'Todos' ? articulos : articulos.filter(a => a.estadoInspeccion === filtro);
+
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="Inspección de artículos" onBack={() => onNavigate('cuenta')} />
+      <AppHeader
+        title="Artículos"
+        onBack={() => {
+          if (params?.backTo === 'chatSoporte' && params.chatParams) {
+            onNavigate('chatSoporte', params.chatParams);
+          } else {
+            onNavigate('cuenta');
+          }
+        }}
+      />
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.title}>Cola de inspección</Text>
-          <Text style={styles.subtitle}>
-            Revisá la procedencia y el estado declarado de cada artículo. Aprobá los que cumplan o rechazá indicando el motivo.
-          </Text>
+          <Text style={styles.title}>Gestión de artículos</Text>
+
+          {/* Filtros */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+            {FILTROS.map((f) => (
+              <TouchableOpacity
+                key={f}
+                style={[styles.chip, filtro === f && styles.chipActive]}
+                onPress={() => setFiltro(f)}
+              >
+                <Text style={[styles.chipText, filtro === f && styles.chipTextActive]}>{f}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           {loading && <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />}
 
@@ -93,22 +126,31 @@ export function InspeccionScreen({ onNavigate }: Props) {
             <Text style={[styles.empty, { color: Colors.red }]}>{error}</Text>
           )}
 
-          {!loading && !error && articulos.length === 0 && (
+          {!loading && !error && filtrados.length === 0 && (
             <View style={styles.emptyCard}>
               <CheckCircleIcon size={32} color={Colors.green} />
-              <Text style={styles.emptyTitle}>No hay artículos pendientes</Text>
-              <Text style={styles.empty}>Cuando un postor publique un artículo, aparecerá acá para su inspección.</Text>
+              <Text style={styles.emptyTitle}>Sin artículos</Text>
+              <Text style={styles.empty}>No hay artículos con el estado seleccionado.</Text>
             </View>
           )}
 
-          {articulos.map((a) => {
+          {filtrados.map((a) => {
             const enRechazo = rechazandoId === a.id;
             const busy = procesando === a.id;
             return (
               <View key={a.id} style={styles.card}>
                 <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardTitle}>{a.titulo || `Artículo #${a.id}`}</Text>
-                  {a.categoria ? <Text style={styles.categoria}>{a.categoria}</Text> : null}
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    {a.estadoInspeccion ? (
+                      <View style={[styles.estadoBadge, { backgroundColor: (ESTADO_COLORS[a.estadoInspeccion]?.bg ?? Colors.gray4) }]}>
+                        <Text style={[styles.estadoBadgeText, { color: (ESTADO_COLORS[a.estadoInspeccion]?.color ?? Colors.gray) }]}>
+                          {a.estadoInspeccion}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {a.categoria ? <Text style={styles.categoria}>{a.categoria}</Text> : null}
+                  </View>
                 </View>
 
                 <Text style={styles.fieldLabel}>DESCRIPCIÓN</Text>
@@ -136,7 +178,40 @@ export function InspeccionScreen({ onNavigate }: Props) {
                   </Text>
                 </View>
 
-                {enRechazo ? (
+                {/* Motivo de rechazo si ya fue rechazado */}
+                {a.estadoInspeccion === 'RECHAZADO' && a.motivoRechazo && !enRechazo ? (
+                  <View style={[styles.rechazoForm, { backgroundColor: Colors.redLight, borderRadius: 10, padding: 10, marginTop: 10 }]}>
+                    <Text style={[styles.fieldLabel, { color: Colors.red }]}>MOTIVO DEL RECHAZO</Text>
+                    <Text style={styles.fieldValue}>{a.motivoRechazo}</Text>
+                  </View>
+                ) : null}
+
+                {/* Botón de chat para rechazados */}
+                {a.estadoInspeccion === 'RECHAZADO' ? (
+                  <TouchableOpacity
+                    style={[styles.btn, styles.btnChat]}
+                    onPress={async () => {
+                      try {
+                        const conv = await apiCrearConversacion(a.id);
+                        onNavigate('chatSoporte', {
+                          conversacionId: conv.conversacionId,
+                          titulo: a.titulo ?? 'Soporte',
+                          productoId: a.id,
+                          productoTitulo: a.titulo ?? undefined,
+                          productoEstado: a.estadoInspeccion ?? undefined,
+                          productoMotivo: a.motivoRechazo ?? undefined,
+                        });
+                      } catch (e: any) {
+                        Alert.alert('Error', e?.message ?? 'No se pudo abrir el chat');
+                      }
+                    }}
+                  >
+                    <Text style={styles.btnChatText}>Ver chat del dueño</Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Acciones de inspección solo para PENDIENTE */}
+                {a.estadoInspeccion === 'PENDIENTE' && (enRechazo ? (
                   <View style={styles.rechazoForm}>
                     <Text style={styles.fieldLabel}>MOTIVO DEL RECHAZO</Text>
                     <TextInput
@@ -180,7 +255,7 @@ export function InspeccionScreen({ onNavigate }: Props) {
                       )}
                     </TouchableOpacity>
                   </View>
-                )}
+                ))}
               </View>
             );
           })}
@@ -227,4 +302,12 @@ const styles = StyleSheet.create({
   btnDangerOutlineText: { color: Colors.red, fontWeight: '800', fontSize: 14 },
   btnGhost: { backgroundColor: Colors.gray4 },
   btnGhostText: { color: Colors.gray, fontWeight: '800', fontSize: 14 },
+  chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.gray4, marginRight: 8 },
+  chipActive: { backgroundColor: Colors.primary },
+  chipText: { fontSize: 13, fontWeight: '600', color: Colors.gray },
+  chipTextActive: { color: Colors.white },
+  estadoBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  estadoBadgeText: { fontSize: 11, fontWeight: '800' },
+  btnChat: { backgroundColor: Colors.blueLight, marginTop: 10 },
+  btnChatText: { color: Colors.primary, fontWeight: '800', fontSize: 14 },
 });

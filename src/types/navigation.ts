@@ -28,7 +28,9 @@ export type ScreenName =
   | 'faltaMetodoPago'
   | 'accesoPlatino'
   | 'usuarioHabilitado'
-  | 'cuentasCobro';
+  | 'cuentasCobro'
+  | 'adminChats'
+  | 'crearSubasta';
 
 export type ScreenParams = {
   splash: undefined;
@@ -45,8 +47,8 @@ export type ScreenParams = {
   cuenta: undefined;
   ajustes: undefined;
   seguros: undefined;
-  misProductos: undefined;
-  inspeccion: undefined;
+  misProductos: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte'] } | undefined;
+  inspeccion: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte'] } | undefined;
   detalleAdjudicacion: undefined;
   finalizarCompra: { registroId: number };
   pagoExitoso: {
@@ -63,7 +65,16 @@ export type ScreenParams = {
     moneda: string;
     mensaje?: string;
   };
-  chatSoporte: { productoId: number };
+  chatSoporte: {
+    conversacionId: number;
+    titulo?: string;
+    productoId?: number;
+    productoTitulo?: string;
+    productoEstado?: string;
+    productoMotivo?: string;
+  };
+  adminChats: undefined;
+  crearSubasta: undefined;
   publicarArticulo: undefined;
   agregarMetodoPago: undefined;
   agregarTarjeta: undefined;

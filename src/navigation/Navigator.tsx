@@ -32,13 +32,16 @@ import {
   AccesoPlatinoScreen,
   UsuarioHabilitadoScreen,
   CuentasCobroScreen,
+  AdminChatsScreen,
+  CrearSubastaScreen,
 } from '../screens';
 import type { ScreenName, ScreenParams, NavState, NavigateFn } from '../types/navigation';
 
 export function Navigator() {
   const [nav, setNav] = useState<NavState>({ screen: 'splash' });
   const [guest, setGuest] = useState(false);
-  const { isLoading, token } = useAuthContext();
+  const { isLoading, token, currentUser } = useAuthContext();
+  const isAdmin = currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('EMPLEADO');
 
   const AUTH_SCREENS: ScreenName[] = ['login', 'register', 'verifyEmail', 'registerStage2', 'accountPending', 'recuperarCuenta'];
   const GUEST_SCREENS: ScreenName[] = ['subastas', 'detalleSubasta', ...AUTH_SCREENS];
@@ -46,7 +49,11 @@ export function Navigator() {
   useEffect(() => {
     if (isLoading) return;
     if (nav.screen === 'splash') {
-      setNav({ screen: token ? 'subastas' : 'login' });
+      if (token) {
+        setNav({ screen: isAdmin ? 'adminChats' : 'subastas' });
+      } else {
+        setNav({ screen: 'login' });
+      }
       return;
     }
     if (!token && !guest && !AUTH_SCREENS.includes(nav.screen)) {
@@ -101,9 +108,9 @@ export function Navigator() {
     case 'seguros':
       return <SegurosScreen onNavigate={navigate} />;
     case 'misProductos':
-      return <MisProductosScreen onNavigate={navigate} />;
+      return <MisProductosScreen onNavigate={navigate} params={params as ScreenParams['misProductos']} />;
     case 'inspeccion':
-      return <InspeccionScreen onNavigate={navigate} />;
+      return <InspeccionScreen onNavigate={navigate} params={params as ScreenParams['inspeccion']} />;
     case 'detalleAdjudicacion':
       return <DetalleAdjudicacionScreen onNavigate={navigate} />;
     case 'finalizarCompra':
@@ -132,6 +139,10 @@ export function Navigator() {
       return <UsuarioHabilitadoScreen onNavigate={navigate} />;
     case 'cuentasCobro':
       return <CuentasCobroScreen onNavigate={navigate} />;
+    case 'adminChats':
+      return <AdminChatsScreen onNavigate={navigate} />;
+    case 'crearSubasta':
+      return <CrearSubastaScreen onNavigate={navigate} />;
     default:
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

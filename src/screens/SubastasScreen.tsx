@@ -7,11 +7,12 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { AppHeader, BottomNav, GavelIcon, CalendarIcon, MapPinIcon } from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useSubastas } from '../hooks';
-import { apiGetColecciones } from '../api';
+import { apiGetColecciones, apiIniciarSubasta, apiCerrarSubasta } from '../api';
 import type { ColeccionResumen } from '../types/coleccion';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
@@ -25,8 +26,10 @@ const FILTERS = ['Todas', 'Común', 'Plata', 'Oro', 'Platino'];
 
 export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const { currentUser } = useAuthContext();
+  const isAdmin = currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('EMPLEADO');
   const { filtered, loading, filter, setFilter } = useSubastas();
   const [colecciones, setColecciones] = useState<ColeccionResumen[]>([]);
+  const [accionando, setAccionando] = useState<number | null>(null);
 
   useEffect(() => {
     apiGetColecciones()
@@ -37,19 +40,66 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const coleccionPorSubasta = (subastaId: number) =>
     colecciones.find((c) => c.subastaId === subastaId);
 
+  const iniciar = async (subastaId: number) => {
+    setAccionando(subastaId);
+    try {
+      await apiIniciarSubasta(subastaId);
+      Alert.alert('Subasta iniciada', `Subasta #${subastaId} iniciada correctamente.`);
+    } catch (e: any) {
+      Alert.alert('Error', e?.message ?? 'No se pudo iniciar la subasta');
+    } finally {
+      setAccionando(null);
+    }
+  };
+
+  const cerrar = async (subastaId: number) => {
+    Alert.alert('Cerrar subasta', `¿Cerrás la subasta #${subastaId}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Cerrar', style: 'destructive', onPress: async () => {
+          setAccionando(subastaId);
+          try {
+            await apiCerrarSubasta(subastaId);
+            Alert.alert('Subasta cerrada', `Subasta #${subastaId} cerrada.`);
+          } catch (e: any) {
+            Alert.alert('Error', e?.message ?? 'No se pudo cerrar la subasta');
+          } finally {
+            setAccionando(null);
+          }
+        },
+      },
+    ]);
+  };
+
+  const liveEstados = ['ACTIVA', 'EN_CURSO', 'ABIERTA'];
+
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader
-        title="Subastas"
+        title={isAdmin ? 'Gestión de subastas' : 'Subastas'}
         right={
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{currentUser?.email?.slice(0, 2).toUpperCase() ?? 'AS'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {isAdmin && (
+              <TouchableOpacity
+                style={styles.newBtn}
+                onPress={() => onNavigate('crearSubasta')}
+              >
+                <Text style={styles.newBtnText}>+ Nueva</Text>
+              </TouchableOpacity>
+            )}
+            <View style={[styles.avatar, isAdmin && styles.avatarAdmin]}>
+              <Text style={[styles.avatarText, isAdmin && styles.avatarTextAdmin]}>
+                {currentUser?.email?.slice(0, 2).toUpperCase() ?? 'AS'}
+              </Text>
+            </View>
           </View>
         }
       />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.screenTitle}>Subastas disponibles</Text>
+          <Text style={styles.screenTitle}>
+            {isAdmin ? 'Todas las subastas' : 'Subastas disponibles'}
+          </Text>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
             {FILTERS.map((f) => (
@@ -70,7 +120,8 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
           )}
 
           {filtered.map((item) => {
-            const isLive = ['ACTIVA', 'EN_CURSO', 'ABIERTA'].includes(item.estado);
+            const isLive = liveEstados.includes(item.estado);
+            const isPendiente = !isLive && item.estado !== 'CERRADA';
             const coleccion = coleccionPorSubasta(item.id);
             return (
               <TouchableOpacity
@@ -80,8 +131,8 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                 activeOpacity={0.9}
               >
                 <View style={styles.imageWrap}>
-                  <View style={[styles.image, { backgroundColor: Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
-                    <GavelIcon size={56} color={Colors.primary} strokeWidth={1.6} />
+                  <View style={[styles.image, { backgroundColor: isAdmin ? '#1E293B' : Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
+                    <GavelIcon size={56} color={isAdmin ? Colors.primary : Colors.primary} strokeWidth={1.6} />
                   </View>
                   <View style={styles.badges}>
                     <View style={[styles.badge, isLive ? styles.badgeLive : styles.badgeUpcoming]}>
@@ -113,12 +164,48 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                       <Text style={styles.metaText}>{item.ubicacion}</Text>
                     </View>
                   ) : null}
-                  <View style={styles.footer}>
-                    <View />
-                    <TouchableOpacity style={styles.button} onPress={() => onNavigate('detalleSubasta', { subasta: item })}>
-                      <Text style={styles.buttonText}>{isLive ? 'Ingresar a la subasta' : 'Ver detalles'}</Text>
-                    </TouchableOpacity>
-                  </View>
+
+                  {isAdmin ? (
+                    /* ── Controles admin ── */
+                    <View style={styles.adminActions}>
+                      <TouchableOpacity
+                        style={styles.btnGestionar}
+                        onPress={() => onNavigate('detalleSubasta', { subasta: item })}
+                      >
+                        <Text style={styles.btnGestionarText}>Ver detalle</Text>
+                      </TouchableOpacity>
+                      {isPendiente && (
+                        <TouchableOpacity
+                          style={[styles.btnAccion, { backgroundColor: Colors.greenLight }]}
+                          onPress={() => iniciar(item.id)}
+                          disabled={accionando === item.id}
+                        >
+                          {accionando === item.id
+                            ? <ActivityIndicator size="small" color={Colors.green} />
+                            : <Text style={[styles.btnAccionText, { color: Colors.green }]}>Iniciar</Text>}
+                        </TouchableOpacity>
+                      )}
+                      {isLive && (
+                        <TouchableOpacity
+                          style={[styles.btnAccion, { backgroundColor: Colors.redLight }]}
+                          onPress={() => cerrar(item.id)}
+                          disabled={accionando === item.id}
+                        >
+                          {accionando === item.id
+                            ? <ActivityIndicator size="small" color={Colors.red} />
+                            : <Text style={[styles.btnAccionText, { color: Colors.red }]}>Cerrar</Text>}
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ) : (
+                    /* ── CTA postor ── */
+                    <View style={styles.footer}>
+                      <View />
+                      <TouchableOpacity style={styles.button} onPress={() => onNavigate('detalleSubasta', { subasta: item })}>
+                        <Text style={styles.buttonText}>{isLive ? 'Ingresar a la subasta' : 'Ver detalles'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
             );
@@ -170,4 +257,13 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   button: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
   buttonText: { color: Colors.white, fontSize: 14, fontWeight: '600' },
+  avatarAdmin: { backgroundColor: '#1E293B' },
+  avatarTextAdmin: { color: Colors.white },
+  newBtn: { backgroundColor: Colors.primary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  newBtnText: { color: Colors.white, fontWeight: '800', fontSize: 13 },
+  adminActions: { flexDirection: 'row', gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9', flexWrap: 'wrap' },
+  btnGestionar: { backgroundColor: Colors.blueLight, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10 },
+  btnGestionarText: { color: Colors.primary, fontSize: 13, fontWeight: '700' },
+  btnAccion: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10 },
+  btnAccionText: { fontSize: 13, fontWeight: '700' },
 });
