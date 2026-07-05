@@ -50,8 +50,8 @@ export function CuentaScreen({ onNavigate }: CuentaScreenProps) {
   const categoria = currentUser?.categoria || currentUser?.estado || 'SIN CATEGORÍA';
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const esInspector = (currentUser?.roles ?? []).some((r) => INSPECTOR_ROLES.includes(r));
-  const items = esInspector
-    ? [...menuItems, { Icon: FileIcon, label: 'Inspección de artículos', screen: 'inspeccion' as ScreenName }]
+  const items: MenuItem[] = esInspector
+    ? [...menuItems, { Icon: FileIcon, label: 'Inspección de artículos', screen: 'inspeccion' }]
     : menuItems;
 
   useEffect(() => {
@@ -79,24 +79,35 @@ export function CuentaScreen({ onNavigate }: CuentaScreenProps) {
           </View>
           <Text style={styles.name}>{currentUser?.email ?? 'Usuario'}</Text>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>CATEGORÍA {categoria.toUpperCase()}</Text>
+            <Text style={styles.categoryBadgeText}>
+              {esInspector ? (currentUser?.roles ?? []).join(' / ') : `CATEGORÍA ${categoria.toUpperCase()}`}
+            </Text>
           </View>
 
           {/* Stats (reales) */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{metricas?.subastasParticipadas ?? '—'}</Text>
-              <Text style={styles.statLabel}>SUBASTAS</Text>
+          {esInspector ? (
+            <View style={styles.roleCard}>
+              <Text style={styles.roleCardText}>
+                {(currentUser?.roles ?? []).includes('ADMIN') ? 'Cuenta de administrador' : 'Cuenta de empleado'}
+              </Text>
+              <Text style={styles.roleCardSub}>Gestión de subastas, artículos y soporte.</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: Colors.green }]}>{metricas?.subastasGanadas ?? '—'}</Text>
-              <Text style={styles.statLabel}>GANADAS</Text>
+          ) : (
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{metricas?.subastasParticipadas ?? '—'}</Text>
+                <Text style={styles.statLabel}>SUBASTAS</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={[styles.statValue, { color: Colors.green }]}>{metricas?.subastasGanadas ?? '—'}</Text>
+                <Text style={styles.statLabel}>GANADAS</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{metricas ? formatMonto(metricas.totalPagado) : '—'}</Text>
+                <Text style={styles.statLabel}>PAGADO</Text>
+              </View>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{metricas ? formatMonto(metricas.totalPagado) : '—'}</Text>
-              <Text style={styles.statLabel}>PAGADO</Text>
-            </View>
-          </View>
+          )}
 
           {/* Menú */}
           <View style={styles.menu}>
@@ -157,6 +168,12 @@ const styles = StyleSheet.create({
   levelPct: { fontSize: 18, fontWeight: '800', color: Colors.primary },
   progressTrack: { height: 8, borderRadius: 4, backgroundColor: Colors.gray4, marginTop: 12, overflow: 'hidden' },
   progressFill: { height: 8, borderRadius: 4, backgroundColor: Colors.primary },
+  roleCard: {
+    width: '100%', backgroundColor: Colors.white, borderRadius: 16, padding: 18, marginTop: 14, alignItems: 'center',
+    shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
+  },
+  roleCardText: { fontSize: 16, fontWeight: '800', color: Colors.dark },
+  roleCardSub: { fontSize: 13, color: Colors.gray, marginTop: 4, textAlign: 'center' },
   statsRow: { flexDirection: 'row', width: '100%', marginTop: 14, gap: 10 },
   statBox: {
     flex: 1, backgroundColor: Colors.white, borderRadius: 16, paddingVertical: 18, alignItems: 'center',

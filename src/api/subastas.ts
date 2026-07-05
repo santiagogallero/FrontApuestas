@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client';
+import { apiGet, apiPost, apiDelete } from './client';
 import type { Subasta, SubastaTiming, PujaResponse, PujaHistorial, StreamingInfo } from '../types/subasta';
 
 export async function apiGetSubastas(): Promise<Subasta[]> {
@@ -15,6 +15,10 @@ export async function apiGetTiming(subastaId: number): Promise<SubastaTiming> {
 
 export async function apiConectarSubasta(subastaId: number): Promise<string> {
   return apiPost<string>('/api/auction-runtime/subasta/conectar', { subastaId }, true);
+}
+
+export async function apiDesconectarSubasta(): Promise<void> {
+  return apiDelete('/api/auction-runtime/subasta/desconectar', true);
 }
 
 export async function apiPujar(

@@ -137,9 +137,9 @@ export function ChatSoporteScreen({ onNavigate, params }: ChatSoporteScreenProps
               productoMotivo: params.productoMotivo,
             };
             if (isAdmin) {
-              onNavigate('inspeccion', { backTo: 'chatSoporte', chatParams });
+              onNavigate('inspeccion', { backTo: 'chatSoporte', chatParams, productoId: params.productoId });
             } else {
-              onNavigate('misProductos', { backTo: 'chatSoporte', chatParams });
+              onNavigate('misProductos', { backTo: 'chatSoporte', chatParams, productoId: params.productoId });
             }
           }}
         >

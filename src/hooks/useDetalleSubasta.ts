@@ -58,12 +58,29 @@ export function useDetalleSubasta(subastaId: number, itemId: number) {
     try {
       await apiConectarSubasta(subastaId);
       setConectado(true);
-      // Sembrar la oferta actual con el historial existente.
+      // Sembrar la oferta actual y el feed con el historial existente
+      // (si no, al volver a entrar el feed en vivo aparece vacío aunque ya hubo pujas).
       try {
         const historial = await apiGetHistorialPujas(itemId);
         if (historial.length > 0) {
           const mejor = historial.reduce((a, b) => (b.importe > a.importe ? b : a));
           setMejorOferta(mejor.importe);
+          const historialBids: BidEvent[] = historial
+            .slice()
+            .reverse()
+            .map((h) => ({
+              tipo: 'NUEVA_PUJA',
+              subastaId,
+              itemId,
+              pujoId: h.pujoId,
+              numeroPostor: h.numeroPostor,
+              nombrePostor: h.nombreCliente,
+              importe: h.importe,
+              minimoPermitido: 0,
+              maximoPermitido: null,
+              timestamp: '',
+            }));
+          setBids(historialBids.slice(0, 25));
         }
       } catch {
         // sin historial disponible: arranca en 0

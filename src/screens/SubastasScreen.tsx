@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
   SafeAreaView,
   StyleSheet,
@@ -12,8 +14,10 @@ import {
 import { AppHeader, BottomNav, GavelIcon, CalendarIcon, MapPinIcon } from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useSubastas } from '../hooks';
-import { apiGetColecciones, apiIniciarSubasta, apiCerrarSubasta } from '../api';
+import { API_BASE, apiGetCatalogoSubasta, apiGetColecciones, apiIniciarSubasta, apiCerrarSubasta, apiGetMisAdjudicaciones } from '../api';
 import type { ColeccionResumen } from '../types/coleccion';
+import type { CatalogoItem } from '../types/catalogo';
+import type { Adjudicacion } from '../types/cuenta';
 import { Colors } from '../theme/colors';
 import type { NavigateFn } from '../types/navigation';
 
@@ -22,7 +26,7 @@ interface SubastasScreenProps {
   isGuest?: boolean;
 }
 
-const FILTERS = ['Todas', 'Común', 'Plata', 'Oro', 'Platino'];
+const FILTERS = ['Todas', 'Común', 'Especial', 'Plata', 'Oro', 'Platino'];
 
 export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const { currentUser } = useAuthContext();
@@ -30,6 +34,9 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
   const { filtered, loading, filter, setFilter } = useSubastas();
   const [colecciones, setColecciones] = useState<ColeccionResumen[]>([]);
   const [accionando, setAccionando] = useState<number | null>(null);
+  const [itemPorSubasta, setItemPorSubasta] = useState<Record<number, CatalogoItem | null>>({});
+  const [duracionInputs, setDuracionInputs] = useState<Record<number, string>>({});
+  const [adjudicaciones, setAdjudicaciones] = useState<Adjudicacion[]>([]);
 
   useEffect(() => {
     apiGetColecciones()
@@ -37,14 +44,32 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
       .catch(() => setColecciones([]));
   }, []);
 
+  useEffect(() => {
+    if (isGuest || isAdmin) return;
+    apiGetMisAdjudicaciones()
+      .then(setAdjudicaciones)
+      .catch(() => setAdjudicaciones([]));
+  }, [isGuest, isAdmin]);
+
+  useEffect(() => {
+    filtered.forEach((s) => {
+      if (itemPorSubasta[s.id] !== undefined) return;
+      apiGetCatalogoSubasta(s.id, false)
+        .then((cat) => setItemPorSubasta((prev) => ({ ...prev, [s.id]: cat.items[0] ?? null })))
+        .catch(() => setItemPorSubasta((prev) => ({ ...prev, [s.id]: null })));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered]);
+
   const coleccionPorSubasta = (subastaId: number) =>
     colecciones.find((c) => c.subastaId === subastaId);
 
   const iniciar = async (subastaId: number) => {
+    const duracion = parseInt(duracionInputs[subastaId] ?? '1', 10) || 1;
     setAccionando(subastaId);
     try {
-      await apiIniciarSubasta(subastaId);
-      Alert.alert('Subasta iniciada', `Subasta #${subastaId} iniciada correctamente.`);
+      await apiIniciarSubasta(subastaId, duracion);
+      Alert.alert('Subasta iniciada', `Subasta #${subastaId} iniciada. Cada ítem dura ${duracion} minuto(s).`);
     } catch (e: any) {
       Alert.alert('Error', e?.message ?? 'No se pudo iniciar la subasta');
     } finally {
@@ -121,23 +146,35 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
 
           {filtered.map((item) => {
             const isLive = liveEstados.includes(item.estado);
-            const isPendiente = !isLive && item.estado !== 'CERRADA';
+            const isCerrada = item.estado === 'CERRADA';
+            const isPendiente = !isLive && !isCerrada;
             const coleccion = coleccionPorSubasta(item.id);
+            const catalogItem = itemPorSubasta[item.id];
+            const gane = !isAdmin && adjudicaciones.some((a) => a.subastaId === item.id);
+            const cerradaSinGanar = isCerrada && !isAdmin && !gane;
             return (
               <TouchableOpacity
                 key={item.id}
-                style={styles.card}
-                onPress={() => onNavigate('detalleSubasta', { subasta: item })}
-                activeOpacity={0.9}
+                style={[styles.card, cerradaSinGanar && styles.cardApagada]}
+                onPress={cerradaSinGanar ? undefined : () => onNavigate('detalleSubasta', { subasta: item })}
+                activeOpacity={cerradaSinGanar ? 1 : 0.9}
               >
                 <View style={styles.imageWrap}>
-                  <View style={[styles.image, { backgroundColor: isAdmin ? '#1E293B' : Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
-                    <GavelIcon size={56} color={isAdmin ? Colors.primary : Colors.primary} strokeWidth={1.6} />
-                  </View>
+                  {catalogItem?.fotoUrl ? (
+                    <Image
+                      source={{ uri: `${API_BASE}${catalogItem.fotoUrl}` }}
+                      style={styles.image}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.image, { backgroundColor: isAdmin ? '#1E293B' : Colors.blueLight, justifyContent: 'center', alignItems: 'center' }]}>
+                      <GavelIcon size={56} color={isAdmin ? Colors.primary : Colors.primary} strokeWidth={1.6} />
+                    </View>
+                  )}
                   <View style={styles.badges}>
-                    <View style={[styles.badge, isLive ? styles.badgeLive : styles.badgeUpcoming]}>
-                      <Text style={[styles.badgeText, isLive ? styles.badgeLiveText : styles.badgeUpcomingText]}>
-                        {isLive ? '● LIVE' : item.estado ?? 'PENDIENTE'}
+                    <View style={[styles.badge, isLive ? styles.badgeLive : gane ? styles.badgeGanaste : styles.badgeUpcoming]}>
+                      <Text style={[styles.badgeText, isLive || gane ? styles.badgeLiveText : styles.badgeUpcomingText]}>
+                        {isLive ? '● LIVE' : gane ? '🏆 GANASTE' : item.estado ?? 'PENDIENTE'}
                       </Text>
                     </View>
                     <View style={styles.badgeCategory}>
@@ -147,7 +184,7 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                 </View>
                 <View style={styles.body}>
                   <Text style={styles.cardTitle}>
-                    {coleccion ? coleccion.nombre : `Subasta #${item.id}`}
+                    {coleccion ? coleccion.nombre : catalogItem?.titulo ?? `Subasta #${item.id}`}
                   </Text>
                   {coleccion && (
                     <Text style={styles.collectionHint}>
@@ -175,15 +212,26 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                         <Text style={styles.btnGestionarText}>Ver detalle</Text>
                       </TouchableOpacity>
                       {isPendiente && (
-                        <TouchableOpacity
-                          style={[styles.btnAccion, { backgroundColor: Colors.greenLight }]}
-                          onPress={() => iniciar(item.id)}
-                          disabled={accionando === item.id}
-                        >
-                          {accionando === item.id
-                            ? <ActivityIndicator size="small" color={Colors.green} />
-                            : <Text style={[styles.btnAccionText, { color: Colors.green }]}>Iniciar</Text>}
-                        </TouchableOpacity>
+                        <>
+                          <View style={styles.duracionBox}>
+                            <Text style={styles.duracionLabel}>MIN/ÍTEM</Text>
+                            <TextInput
+                              style={styles.duracionInput}
+                              keyboardType="numeric"
+                              value={duracionInputs[item.id] ?? '1'}
+                              onChangeText={(v) => setDuracionInputs((prev) => ({ ...prev, [item.id]: v.replace(/[^0-9]/g, '') }))}
+                            />
+                          </View>
+                          <TouchableOpacity
+                            style={[styles.btnAccion, { backgroundColor: Colors.greenLight }]}
+                            onPress={() => iniciar(item.id)}
+                            disabled={accionando === item.id}
+                          >
+                            {accionando === item.id
+                              ? <ActivityIndicator size="small" color={Colors.green} />
+                              : <Text style={[styles.btnAccionText, { color: Colors.green }]}>Iniciar</Text>}
+                          </TouchableOpacity>
+                        </>
                       )}
                       {isLive && (
                         <TouchableOpacity
@@ -201,9 +249,17 @@ export function SubastasScreen({ onNavigate, isGuest }: SubastasScreenProps) {
                     /* ── CTA postor ── */
                     <View style={styles.footer}>
                       <View />
-                      <TouchableOpacity style={styles.button} onPress={() => onNavigate('detalleSubasta', { subasta: item })}>
-                        <Text style={styles.buttonText}>{isLive ? 'Ingresar a la subasta' : 'Ver detalles'}</Text>
-                      </TouchableOpacity>
+                      {gane ? (
+                        <TouchableOpacity style={[styles.button, styles.buttonGanaste]} onPress={() => onNavigate('detalleAdjudicacion')}>
+                          <Text style={styles.buttonText}>🏆 Ganaste — Ver pago</Text>
+                        </TouchableOpacity>
+                      ) : cerradaSinGanar ? (
+                        <Text style={styles.finalizadaText}>Finalizada</Text>
+                      ) : (
+                        <TouchableOpacity style={styles.button} onPress={() => onNavigate('detalleSubasta', { subasta: item })}>
+                          <Text style={styles.buttonText}>{isLive ? 'Ingresar a la subasta' : 'Ver detalles'}</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
                 </View>
@@ -238,12 +294,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
     overflow: 'hidden',
   },
+  cardApagada: { opacity: 0.55 },
   imageWrap: { position: 'relative', height: 200 },
   image: { width: '100%', height: 200 },
   badges: { position: 'absolute', top: 12, left: 12, flexDirection: 'row', gap: 8 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16 },
   badgeLive: { backgroundColor: Colors.red },
   badgeUpcoming: { backgroundColor: Colors.primary },
+  badgeGanaste: { backgroundColor: Colors.green },
   badgeText: { fontSize: 11, fontWeight: '700' },
   badgeLiveText: { color: Colors.white },
   badgeUpcomingText: { color: Colors.white },
@@ -257,6 +315,8 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   button: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
   buttonText: { color: Colors.white, fontSize: 14, fontWeight: '600' },
+  buttonGanaste: { backgroundColor: Colors.green },
+  finalizadaText: { color: Colors.gray, fontSize: 14, fontWeight: '600' },
   avatarAdmin: { backgroundColor: '#1E293B' },
   avatarTextAdmin: { color: Colors.white },
   newBtn: { backgroundColor: Colors.primary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
@@ -266,4 +326,10 @@ const styles = StyleSheet.create({
   btnGestionarText: { color: Colors.primary, fontSize: 13, fontWeight: '700' },
   btnAccion: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10 },
   btnAccionText: { fontSize: 13, fontWeight: '700' },
+  duracionBox: { alignItems: 'center' },
+  duracionLabel: { fontSize: 9, fontWeight: '800', color: Colors.gray, letterSpacing: 0.5, marginBottom: 4 },
+  duracionInput: {
+    width: 48, height: 36, borderRadius: 10, backgroundColor: Colors.gray4, textAlign: 'center',
+    fontSize: 14, fontWeight: '700', color: Colors.dark,
+  },
 });

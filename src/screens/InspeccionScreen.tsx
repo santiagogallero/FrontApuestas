@@ -89,7 +89,10 @@ export function InspeccionScreen({ onNavigate, params }: Props) {
     }
   };
 
-  const filtrados = filtro === 'Todos' ? articulos : articulos.filter(a => a.estadoInspeccion === filtro);
+  const modoDetalle = params?.productoId != null;
+  const filtrados = modoDetalle
+    ? articulos.filter((a) => a.id === params.productoId)
+    : (filtro === 'Todos' ? articulos : articulos.filter(a => a.estadoInspeccion === filtro));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,20 +108,22 @@ export function InspeccionScreen({ onNavigate, params }: Props) {
       />
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.title}>Gestión de artículos</Text>
+          <Text style={styles.title}>{modoDetalle ? 'Detalle del artículo' : 'Gestión de artículos'}</Text>
 
           {/* Filtros */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-            {FILTROS.map((f) => (
-              <TouchableOpacity
-                key={f}
-                style={[styles.chip, filtro === f && styles.chipActive]}
-                onPress={() => setFiltro(f)}
-              >
-                <Text style={[styles.chipText, filtro === f && styles.chipTextActive]}>{f}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {!modoDetalle && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+              {FILTROS.map((f) => (
+                <TouchableOpacity
+                  key={f}
+                  style={[styles.chip, filtro === f && styles.chipActive]}
+                  onPress={() => setFiltro(f)}
+                >
+                  <Text style={[styles.chipText, filtro === f && styles.chipTextActive]}>{f}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
           {loading && <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />}
 
@@ -130,7 +135,9 @@ export function InspeccionScreen({ onNavigate, params }: Props) {
             <View style={styles.emptyCard}>
               <CheckCircleIcon size={32} color={Colors.green} />
               <Text style={styles.emptyTitle}>Sin artículos</Text>
-              <Text style={styles.empty}>No hay artículos con el estado seleccionado.</Text>
+              <Text style={styles.empty}>
+                {modoDetalle ? 'No se encontró el artículo.' : 'No hay artículos con el estado seleccionado.'}
+              </Text>
             </View>
           )}
 

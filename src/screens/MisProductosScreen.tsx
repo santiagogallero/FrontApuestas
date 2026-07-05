@@ -51,12 +51,15 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
     cargar();
   }, [cargar]);
 
-  const filtered = articulos.filter((a) => {
-    if (filter === 'Aprobados') return a.estadoInspeccion === 'APROBADO';
-    if (filter === 'Pendientes') return a.estadoInspeccion === 'PENDIENTE';
-    if (filter === 'Rechazados') return a.estadoInspeccion === 'RECHAZADO';
-    return true;
-  });
+  const modoDetalle = params?.productoId != null;
+  const filtered = modoDetalle
+    ? articulos.filter((a) => a.id === params.productoId)
+    : articulos.filter((a) => {
+        if (filter === 'Aprobados') return a.estadoInspeccion === 'APROBADO';
+        if (filter === 'Pendientes') return a.estadoInspeccion === 'PENDIENTE';
+        if (filter === 'Rechazados') return a.estadoInspeccion === 'RECHAZADO';
+        return true;
+      });
 
   const aprobados = articulos.filter((a) => a.estadoInspeccion === 'APROBADO').length;
   const pendientes = articulos.filter((a) => a.estadoInspeccion === 'PENDIENTE').length;
@@ -80,32 +83,36 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
       />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>MIS PRODUCTOS</Text>
-              <Text style={styles.statValue}>{articulos.length}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>APROBADOS</Text>
-              <Text style={[styles.statValue, { color: Colors.green }]}>{aprobados}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>EN INSPECCIÓN</Text>
-              <Text style={[styles.statValue, { color: Colors.orange }]}>{pendientes}</Text>
-            </View>
-          </View>
+          {!modoDetalle && (
+            <>
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>MIS PRODUCTOS</Text>
+                  <Text style={styles.statValue}>{articulos.length}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>APROBADOS</Text>
+                  <Text style={[styles.statValue, { color: Colors.green }]}>{aprobados}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>EN INSPECCIÓN</Text>
+                  <Text style={[styles.statValue, { color: Colors.orange }]}>{pendientes}</Text>
+                </View>
+              </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-            {FILTERS.map((f) => (
-              <TouchableOpacity
-                key={f}
-                style={[styles.chip, filter === f && styles.chipActive]}
-                onPress={() => setFilter(f)}
-              >
-                <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+                {FILTERS.map((f) => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[styles.chip, filter === f && styles.chipActive]}
+                    onPress={() => setFilter(f)}
+                  >
+                    <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
 
           {loading && <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />}
 
@@ -115,7 +122,7 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
 
           {!loading && !error && filtered.length === 0 && (
             <Text style={[styles.empty, { textAlign: 'center', marginTop: 32 }]}>
-              No tenés artículos {filter !== 'Todos' ? `en estado "${filter}"` : 'publicados'}.
+              {modoDetalle ? 'No se encontró el artículo.' : `No tenés artículos ${filter !== 'Todos' ? `en estado "${filter}"` : 'publicados'}.`}
             </Text>
           )}
 

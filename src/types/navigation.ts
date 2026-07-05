@@ -47,8 +47,8 @@ export type ScreenParams = {
   cuenta: undefined;
   ajustes: undefined;
   seguros: undefined;
-  misProductos: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte'] } | undefined;
-  inspeccion: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte'] } | undefined;
+  misProductos: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte']; productoId?: number } | undefined;
+  inspeccion: { backTo?: 'chatSoporte'; chatParams?: ScreenParams['chatSoporte']; productoId?: number } | undefined;
   detalleAdjudicacion: undefined;
   finalizarCompra: { registroId: number };
   pagoExitoso: {

@@ -15,7 +15,7 @@ type IconCmp = (p: { size?: number; color?: string }) => React.ReactElement;
 
 const POSTOR_TABS: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth: boolean }[] = [
   { key: 'subastas',   label: 'Subastas',  Icon: GavelIcon,    requiresAuth: false },
-  { key: 'ventas',     label: 'Ventas',    Icon: TrendingIcon, requiresAuth: true },
+  { key: 'ventas',     label: 'Compras',   Icon: TrendingIcon, requiresAuth: true },
   { key: 'billetera',  label: 'Billetera', Icon: WalletIcon,   requiresAuth: true },
   { key: 'cuenta',     label: 'Cuenta',    Icon: UserIcon,     requiresAuth: true },
 ];
@@ -23,7 +23,7 @@ const POSTOR_TABS: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth
 const ADMIN_TABS: { key: ScreenName; label: string; Icon: IconCmp; requiresAuth: boolean }[] = [
   { key: 'subastas',   label: 'Subastas',  Icon: GavelIcon,    requiresAuth: true },
   { key: 'adminChats', label: 'Chats',     Icon: ChatIcon,     requiresAuth: true },
-  { key: 'ventas',     label: 'Ventas',    Icon: TrendingIcon, requiresAuth: true },
+  { key: 'ventas',     label: 'Compras',   Icon: TrendingIcon, requiresAuth: true },
   { key: 'cuenta',     label: 'Cuenta',    Icon: UserIcon,     requiresAuth: true },
 ];
 

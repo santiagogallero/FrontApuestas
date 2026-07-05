@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { AppHeader, BottomNav, BellIcon, GavelIcon, ShieldIcon } from '../components';
 import { useDetalleSubasta } from '../hooks';
 import { useAuthContext } from '../context/AuthContext';
-import { API_BASE, apiGetCatalogoSubasta, apiGetColeccionPorSubasta, apiGetStreaming, apiGetSubasta, apiGetTiming } from '../api';
+import { API_BASE, apiGetCatalogoSubasta, apiGetColeccionPorSubasta, apiGetStreaming, apiGetSubasta, apiGetTiming, apiDesconectarSubasta, apiGetMisAdjudicaciones } from '../api';
 import type { SubastaTiming } from '../types/subasta';
 import type { CatalogoItem } from '../types/catalogo';
 import type { Coleccion } from '../types/coleccion';
@@ -47,16 +47,40 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
     minimo,
     maximo,
     bids,
+    lastPuja,
     conectar,
     pujar,
   } = useDetalleSubasta(subasta.id, itemIdPuja);
+  const [saliendo, setSaliendo] = useState(false);
   const { currentUser } = useAuthContext();
+  const isAdmin = currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('EMPLEADO');
   const initials = currentUser?.email?.slice(0, 2).toUpperCase() ?? 'JD';
   const [importeManual, setImporteManual] = useState('');
   const [timing, setTiming] = useState<SubastaTiming | null>(null);
   const [segundos, setSegundos] = useState<number | null>(null);
+  const [estadoSubasta, setEstadoSubasta] = useState<string>(subasta.estado ?? '');
+  const cerrada = estadoSubasta?.toUpperCase() === 'CERRADA';
+  const avisoGanasteRef = useRef(false);
 
-  // Polling del timing para el countdown
+  // Si la subasta se cierra mientras la estás mirando, chequeamos si ganaste y avisamos.
+  useEffect(() => {
+    if (!cerrada || isGuest || isAdmin || avisoGanasteRef.current) return;
+    avisoGanasteRef.current = true;
+    apiGetMisAdjudicaciones()
+      .then((adjudicaciones) => {
+        const gane = adjudicaciones.find((a) => a.subastaId === subasta.id);
+        if (gane) {
+          Alert.alert(
+            '🏆 ¡Ganaste la subasta!',
+            'Te adjudicaste la pieza. Andá a pagarla antes de que venza el plazo.',
+            [{ text: 'Ir a pagar', onPress: () => onNavigate('detalleAdjudicacion') }]
+          );
+        }
+      })
+      .catch(() => {});
+  }, [cerrada, isGuest, isAdmin, subasta.id, onNavigate]);
+
+  // Polling del timing + estado real de la subasta (puede cerrarse mientras la mirás)
   useEffect(() => {
     if (!subasta.id) return;
     const fetchTiming = () => {
@@ -65,6 +89,9 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
           setTiming(t);
           setSegundos(t.segundosRestantesItem ?? null);
         })
+        .catch(() => {});
+      apiGetSubasta(subasta.id)
+        .then((s) => setEstadoSubasta(s.estado ?? ''))
         .catch(() => {});
     };
     fetchTiming();
@@ -110,9 +137,9 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
   }, [subasta.id, isGuest, conectado]);
 
   useEffect(() => {
-    if (!subasta.id || !itemIdPuja || isGuest) return;
+    if (!subasta.id || !itemIdPuja || isGuest || isAdmin) return;
     conectar();
-  }, [subasta.id, itemIdPuja, isGuest, conectar]);
+  }, [subasta.id, itemIdPuja, isGuest, isAdmin, conectar]);
 
   // Deriva a las pantallas de bloqueo según el motivo informado por el backend.
   useEffect(() => {
@@ -133,6 +160,27 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
     } catch (e: any) {
       Alert.alert('Error', e.message || 'No se pudo registrar la puja');
     }
+  };
+
+  const handleSalir = () => {
+    Alert.alert('Salir de la subasta', '¿Seguro que querés salir?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Salir',
+        style: 'destructive',
+        onPress: async () => {
+          setSaliendo(true);
+          try {
+            await apiDesconectarSubasta();
+            onNavigate('subastas');
+          } catch (e: any) {
+            Alert.alert('No podés salir', e?.message || 'Ya realizaste una puja en esta subasta.');
+          } finally {
+            setSaliendo(false);
+          }
+        },
+      },
+    ]);
   };
 
   const currentBid = mejorOferta;
@@ -297,6 +345,15 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
                     </View>
                   </View>
                 )}
+                {!lastPuja && (
+                  <TouchableOpacity
+                    style={styles.btnSalir}
+                    onPress={handleSalir}
+                    disabled={saliendo}
+                  >
+                    <Text style={styles.btnSalirText}>{saliendo ? 'Saliendo...' : 'Salir de la subasta'}</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
@@ -306,7 +363,13 @@ export function DetalleSubastaScreen({ onNavigate, params, isGuest }: DetalleSub
               </Text>
             )}
 
-            {!isGuest && !conectado && !conectando && (
+            {isAdmin && (
+              <Text style={{ color: Colors.gray, marginTop: 12, fontSize: 13, fontWeight: '600' }}>
+                Modo administrador: vista de solo lectura, no participás de la puja.
+              </Text>
+            )}
+
+            {!isGuest && !isAdmin && !conectado && !conectando && (
               <Text style={{ color: Colors.gray, marginTop: 12, fontSize: 13 }}>
                 {error ?? 'No estás conectado a la subasta.'}
               </Text>
@@ -387,6 +450,8 @@ const styles = StyleSheet.create({
   bidButtonLabel: { color: Colors.white, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   bidButtonPrice: { color: Colors.white, fontSize: 22, fontWeight: 'bold', marginTop: 4 },
   inputField: { flex: 1, fontSize: 15, color: Colors.dark, paddingRight: 40 },
+  btnSalir: { marginTop: 14, paddingVertical: 12, borderRadius: 14, alignItems: 'center', backgroundColor: Colors.redLight },
+  btnSalirText: { color: Colors.red, fontSize: 13, fontWeight: '700' },
   feedCard: { backgroundColor: Colors.white, borderRadius: 20, padding: 20, marginTop: 16, borderWidth: 1, borderColor: Colors.gray4 },
   feedHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   feedTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark },

@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiGetSubastas } from '../api';
 import type { Subasta } from '../types/subasta';
 
+const DIACRITICS = /[̀-ͯ]/g;
+
+function normalizar(s: string): string {
+  return s.normalize('NFD').replace(DIACRITICS, '').toLowerCase();
+}
+
 export function useSubastas() {
   const [subastas, setSubastas] = useState<Subasta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +34,8 @@ export function useSubastas() {
 
   const filtered = useMemo(() => {
     if (filter === 'Todas') return subastas;
-    return subastas.filter((s) => s.categoria?.toLowerCase() === filter.toLowerCase());
+    const target = normalizar(filter);
+    return subastas.filter((s) => s.categoria != null && normalizar(s.categoria) === target);
   }, [subastas, filter]);
 
   return { subastas, filtered, loading, error, filter, setFilter, refresh: fetchSubastas };

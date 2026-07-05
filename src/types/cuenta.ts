@@ -20,6 +20,7 @@ export interface Metricas {
 export interface Adjudicacion {
   registroId: number | null;
   itemId: number | null;
+  subastaId: number | null;
   productoId: number | null;
   productoDescripcion: string | null;
   ganadorClienteId: number | null;
