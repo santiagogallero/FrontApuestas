@@ -11,7 +11,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { AppHeader, FileIcon, CheckCircleIcon, AlertCircleIcon } from '../components';
+import { AppHeader, FileIcon, CheckCircleIcon, AlertCircleIcon, FotoGaleria } from '../components';
 import { API_BASE, apiGetTodosArticulos, apiInspeccionarArticulo, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo } from '../types/producto';
@@ -162,11 +162,15 @@ export function InspeccionScreen({ onNavigate, params }: Props) {
                 </View>
 
                 {a.cantidadFotos > 0 && (
-                  <Image
-                    source={{ uri: `${API_BASE}/api/productos/${a.id}/foto` }}
-                    style={styles.fotoPreview}
-                    resizeMode="cover"
-                  />
+                  modoDetalle ? (
+                    <FotoGaleria productoId={a.id} cantidadFotos={a.cantidadFotos} height={220} />
+                  ) : (
+                    <Image
+                      source={{ uri: `${API_BASE}/api/productos/${a.id}/foto` }}
+                      style={styles.fotoPreview}
+                      resizeMode="cover"
+                    />
+                  )
                 )}
 
                 <Text style={styles.fieldLabel}>DESCRIPCIÓN</Text>

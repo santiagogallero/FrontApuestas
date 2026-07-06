@@ -10,6 +10,10 @@ export async function apiGetProductos(): Promise<Producto[]> {
   return apiGet<Producto[]>('/api/productos');
 }
 
+export async function apiGetFotosArticulo(id: number): Promise<number[]> {
+  return apiGet<number[]>(`/api/productos/${id}/fotos`);
+}
+
 export async function apiPublicarArticulo(
   payload: PublicarArticuloRequest
 ): Promise<Articulo> {

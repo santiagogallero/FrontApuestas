@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon } from '../components';
+import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon, FotoGaleria } from '../components';
 import { API_BASE, apiGetMisArticulos, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo, EstadoInspeccion } from '../types/producto';
@@ -133,8 +133,8 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
               : ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
             const esRechazado = item.estadoInspeccion === 'RECHAZADO';
             return (
-              <View key={item.id} style={styles.offerCard}>
-                {item.cantidadFotos > 0 ? (
+              <View key={item.id} style={[styles.offerCard, modoDetalle && styles.offerCardDetalle]}>
+                {modoDetalle ? null : item.cantidadFotos > 0 ? (
                   <Image
                     source={{ uri: `${API_BASE}/api/productos/${item.id}/foto` }}
                     style={styles.offerImage}
@@ -145,7 +145,10 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
                     <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
                   </View>
                 )}
-                <View style={styles.offerBody}>
+                <View style={[styles.offerBody, modoDetalle && { marginLeft: 0 }]}>
+                  {modoDetalle && item.cantidadFotos > 0 ? (
+                    <FotoGaleria productoId={item.id} cantidadFotos={item.cantidadFotos} height={220} />
+                  ) : null}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Text style={styles.offerTitle}>{item.titulo || item.descripcionCatalogo || `Producto #${item.id}`}</Text>
                     <StatusBadge text={estado.label} color={estado.color} bg={estado.bg} />
@@ -219,6 +222,7 @@ const styles = StyleSheet.create({
   chipTextActive: { color: Colors.white, fontWeight: '600' },
   empty: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
   offerCard: { flexDirection: 'row', backgroundColor: Colors.white, borderRadius: 20, padding: 12, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  offerCardDetalle: { flexDirection: 'column' },
   offerImage: { width: 80, height: 80, borderRadius: 14 },
   offerBody: { flex: 1, marginLeft: 14 },
   offerTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark, flex: 1, marginRight: 8 },

@@ -7,3 +7,4 @@ export * from './AppSelect';
 export * from './BottomNav';
 export * from './Toggle';
 export * from './StatusBadge';
+export * from './FotoGaleria';
