@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -10,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { AppHeader, BottomNav, StatusBadge, PackageIcon, PlusIcon } from '../components';
-import { apiGetMisArticulos, apiCrearConversacion } from '../api';
+import { API_BASE, apiGetMisArticulos, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo, EstadoInspeccion } from '../types/producto';
 import type { NavigateFn, ScreenParams } from '../types/navigation';
@@ -127,13 +128,23 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
           )}
 
           {filtered.map((item) => {
-            const estado = ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
+            const estado = item.vendido
+              ? { label: 'VENDIDO', color: Colors.primary, bg: Colors.blueLight }
+              : ESTADO_STYLE[item.estadoInspeccion] ?? ESTADO_STYLE.PENDIENTE;
             const esRechazado = item.estadoInspeccion === 'RECHAZADO';
             return (
               <View key={item.id} style={styles.offerCard}>
-                <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
-                  <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
-                </View>
+                {item.cantidadFotos > 0 ? (
+                  <Image
+                    source={{ uri: `${API_BASE}/api/productos/${item.id}/foto` }}
+                    style={styles.offerImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={[styles.offerImage, { backgroundColor: Colors.gray4, justifyContent: 'center', alignItems: 'center' }]}>
+                    <PackageIcon size={30} color={Colors.gray2} strokeWidth={1.7} />
+                  </View>
+                )}
                 <View style={styles.offerBody}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Text style={styles.offerTitle}>{item.titulo || item.descripcionCatalogo || `Producto #${item.id}`}</Text>
@@ -150,6 +161,14 @@ export function MisProductosScreen({ onNavigate, params }: MisProductosScreenPro
                       <Text style={{ color: Colors.gray, fontSize: 11, marginTop: 4 }}>{item.cantidadFotos} foto(s)</Text>
                     ) : null}
                   </View>
+                  {item.vendido ? (
+                    <View style={styles.ventaBox}>
+                      <Text style={styles.ventaLabel}>ARTÍCULO VENDIDO</Text>
+                      <Text style={styles.ventaText}>
+                        Importe: ${item.importeVenta?.toLocaleString() ?? '—'} · Comisión: ${item.comisionVenta?.toLocaleString() ?? '—'}
+                      </Text>
+                    </View>
+                  ) : null}
                   {esRechazado && item.motivoRechazo ? (
                     <View style={styles.rechazoBox}>
                       <Text style={styles.rechazoLabel}>Motivo del rechazo</Text>
@@ -203,6 +222,9 @@ const styles = StyleSheet.create({
   offerImage: { width: 80, height: 80, borderRadius: 14 },
   offerBody: { flex: 1, marginLeft: 14 },
   offerTitle: { fontSize: 15, fontWeight: '700', color: Colors.dark, flex: 1, marginRight: 8 },
+  ventaBox: { backgroundColor: Colors.blueLight, borderRadius: 10, padding: 8, marginTop: 8 },
+  ventaLabel: { fontSize: 10, fontWeight: '800', color: Colors.primary, letterSpacing: 0.5 },
+  ventaText: { fontSize: 12, color: Colors.dark, marginTop: 2 },
   rechazoBox: { backgroundColor: Colors.redLight, borderRadius: 10, padding: 8, marginTop: 8 },
   rechazoLabel: { fontSize: 10, fontWeight: '800', color: Colors.red, letterSpacing: 0.5 },
   rechazoText: { fontSize: 12, color: Colors.dark, marginTop: 2 },

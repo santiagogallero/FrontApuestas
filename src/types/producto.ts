@@ -25,6 +25,9 @@ export interface Articulo {
   cantidadFotos: number;
   declaraPropiedad: boolean;
   origenLicit: boolean;
+  vendido: boolean;
+  importeVenta: number | null;
+  comisionVenta: number | null;
 }
 
 export interface PublicarArticuloRequest {

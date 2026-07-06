@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -11,7 +12,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { AppHeader, FileIcon, CheckCircleIcon, AlertCircleIcon } from '../components';
-import { apiGetTodosArticulos, apiInspeccionarArticulo, apiCrearConversacion } from '../api';
+import { API_BASE, apiGetTodosArticulos, apiInspeccionarArticulo, apiCrearConversacion } from '../api';
 import { Colors } from '../theme/colors';
 import type { Articulo } from '../types/producto';
 import type { NavigateFn } from '../types/navigation';
@@ -160,6 +161,14 @@ export function InspeccionScreen({ onNavigate, params }: Props) {
                   </View>
                 </View>
 
+                {a.cantidadFotos > 0 && (
+                  <Image
+                    source={{ uri: `${API_BASE}/api/productos/${a.id}/foto` }}
+                    style={styles.fotoPreview}
+                    resizeMode="cover"
+                  />
+                )}
+
                 <Text style={styles.fieldLabel}>DESCRIPCIÓN</Text>
                 <Text style={styles.fieldValue}>{a.descripcionCompleta || '—'}</Text>
 
@@ -290,6 +299,7 @@ const styles = StyleSheet.create({
   categoria: { fontSize: 11, fontWeight: '800', color: Colors.primary, backgroundColor: Colors.blueLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   fieldLabel: { fontSize: 11, fontWeight: '800', color: Colors.gray, letterSpacing: 0.8, marginBottom: 4, marginTop: 8 },
   fieldValue: { fontSize: 14, color: Colors.dark, lineHeight: 20 },
+  fotoPreview: { width: '100%', height: 180, borderRadius: 12, marginTop: 10, backgroundColor: Colors.gray4 },
   historiaBox: { backgroundColor: Colors.blueLight, borderRadius: 12, padding: 12, marginTop: 10 },
   historiaHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   historiaTitle: { fontSize: 13, fontWeight: '800', color: Colors.dark, marginLeft: 8 },
